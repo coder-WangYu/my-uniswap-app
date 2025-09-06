@@ -6,7 +6,7 @@ interface SwapToggleProps {
   onClick: () => void;
 }
 
-const SwapToggle: React.FC<SwapToggleProps> = ({ onClick }) => {
+const SwapToggle = ({ onClick }: SwapToggleProps) => {
   return (
     <Box
       sx={{

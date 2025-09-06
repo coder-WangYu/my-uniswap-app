@@ -1,13 +1,13 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
-import { ThemeProvider, CssBaseline, Box } from '@mui/material';
-import { darkTheme } from '../theme/theme';
+import { CssBaseline, Box } from '@mui/material';
+import { CustomThemeProvider } from '../contexts/ThemeContext';
 import AppHeader from '../components/AppHeader';
 import MyPositions from '../components/MyPositions';
 
 const Positions: NextPage = () => {
   return (
-    <ThemeProvider theme={darkTheme}>
+    <CustomThemeProvider>
       <CssBaseline />
       <Head>
         <title>Positions - MyUniswap</title>
@@ -37,7 +37,7 @@ const Positions: NextPage = () => {
           <MyPositions />
         </Box>
       </Box>
-    </ThemeProvider>
+    </CustomThemeProvider>
   );
 };
 

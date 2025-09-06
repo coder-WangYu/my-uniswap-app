@@ -15,7 +15,7 @@ interface Token {
   logo?: string;
 }
 
-const TokenSwap: React.FC = () => {
+const TokenSwap = () => {
   const [fromValue, setFromValue] = useState<string>('0');
   const [toValue, setToValue] = useState<string>('0');
   

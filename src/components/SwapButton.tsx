@@ -7,11 +7,11 @@ interface SwapButtonProps {
   text?: string;
 }
 
-const SwapButton: React.FC<SwapButtonProps> = ({
+const SwapButton = ({
   onClick,
   disabled = false,
   text = '交换',
-}) => {
+}: SwapButtonProps) => {
   return (
     <Button
       variant="contained"

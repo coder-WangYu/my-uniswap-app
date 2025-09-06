@@ -24,7 +24,7 @@ interface SwapInputProps {
   placeholder?: string;
 }
 
-const SwapInput: React.FC<SwapInputProps> = ({
+const SwapInput = ({
   value,
   onChange,
   token,
@@ -33,7 +33,7 @@ const SwapInput: React.FC<SwapInputProps> = ({
   showMax = false,
   onMaxClick,
   placeholder = "0.00",
-}) => {
+}: SwapInputProps) => {
   return (
     <Box
       sx={{

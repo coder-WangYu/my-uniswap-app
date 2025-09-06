@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Paper,
   Typography,
@@ -15,6 +15,7 @@ import {
   Link,
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
+import AddPositionModal from './AddPositionModal';
 
 interface PositionData {
   id: string;
@@ -185,9 +186,10 @@ const mockPositionData: PositionData[] = [
   },
 ];
 
-const MyPositions: React.FC = () => {
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+const MyPositions = () => {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -222,6 +224,7 @@ const MyPositions: React.FC = () => {
             <Button
               variant="contained"
               startIcon={<Add />}
+              onClick={() => setAddModalOpen(true)}
               sx={{
                 textTransform: 'none',
                 px: 3,
@@ -361,6 +364,11 @@ const MyPositions: React.FC = () => {
           }}
         />
       </Paper>
+
+      <AddPositionModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+      />
     </Box>
   );
 };

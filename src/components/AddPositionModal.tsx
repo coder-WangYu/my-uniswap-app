@@ -31,7 +31,7 @@ interface AddPositionModalProps {
   onClose: () => void;
 }
 
-const AddPositionModal: React.FC<AddPositionModalProps> = ({ open, onClose }) => {
+const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
   const [fromValue, setFromValue] = useState<string>('0');
   const [toValue, setToValue] = useState<string>('0');
   const [feeTier, setFeeTier] = useState<string>('1.00%');

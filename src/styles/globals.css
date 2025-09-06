@@ -4,6 +4,18 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  min-height: 100vh;
+  transition: background 0.3s ease;
+}
+
+/* 暗色主题背景 */
+[data-theme="dark"] body {
+  background: linear-gradient(180deg, #212730 0%, #171A20 100%);
+}
+
+/* 亮色主题背景 */
+[data-theme="light"] body {
+  background: linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%);
 }
 
 a {

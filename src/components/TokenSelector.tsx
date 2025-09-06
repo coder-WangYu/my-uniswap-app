@@ -23,13 +23,13 @@ interface TokenSelectorProps {
   onMaxClick?: () => void;
 }
 
-const TokenSelector: React.FC<TokenSelectorProps> = ({
+const TokenSelector = ({
   token,
   onSelect,
   showBalance = false,
   showMax = false,
   onMaxClick,
-}) => {
+}: TokenSelectorProps) => {
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
       {showBalance && token.balance !== undefined && (

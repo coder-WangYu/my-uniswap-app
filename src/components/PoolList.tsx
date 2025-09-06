@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Paper,
   Typography,
@@ -86,11 +86,11 @@ const mockPoolData: PoolData[] = [
   },
 ];
 
-const PoolList: React.FC = () => {
+const PoolList = () => {
   const router = useRouter();
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [addModalOpen, setAddModalOpen] = React.useState(false);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
