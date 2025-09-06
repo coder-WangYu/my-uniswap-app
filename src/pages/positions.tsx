@@ -3,16 +3,16 @@ import Head from 'next/head';
 import { ThemeProvider, CssBaseline, Box } from '@mui/material';
 import { darkTheme } from '../theme/theme';
 import AppHeader from '../components/AppHeader';
-import TokenSwap from '../components/TokenSwap';
+import MyPositions from '../components/MyPositions';
 
-const Home: NextPage = () => {
+const Positions: NextPage = () => {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Head>
-        <title>MyUniswap</title>
+        <title>Positions - MyUniswap</title>
         <meta
-          content="MyUniswap - 去中心化代币交换"
+          content="MyUniswap - 我的持仓"
           name="description"
         />
         <link href="/favicon.ico" rel="icon" />
@@ -31,17 +31,14 @@ const Home: NextPage = () => {
         <Box
           sx={{
             flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             p: 3,
           }}
         >
-          <TokenSwap />
+          <MyPositions />
         </Box>
       </Box>
     </ThemeProvider>
   );
 };
 
-export default Home;
+export default Positions;
