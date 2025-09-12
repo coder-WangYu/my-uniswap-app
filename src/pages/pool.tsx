@@ -10,9 +10,9 @@ const Pool: NextPage = () => {
     <CustomThemeProvider>
       <CssBaseline />
       <Head>
-        <title>Pool - MyUniswap</title>
+        <title>流动性池 - MyUniswap</title>
         <meta
-          content="MyUniswap - 流动性池"
+          content="MyUniswap - 流动性池管理"
           name="description"
         />
         <link href="/favicon.ico" rel="icon" />

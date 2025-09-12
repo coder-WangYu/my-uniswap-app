@@ -15,7 +15,6 @@ import {
   Avatar,
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
-import { useRouter } from 'next/router';
 import AddPositionModal from './AddPositionModal';
 
 interface PoolData {
@@ -87,7 +86,6 @@ const mockPoolData: PoolData[] = [
 ];
 
 const PoolList = () => {
-  const router = useRouter();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -104,7 +102,7 @@ const PoolList = () => {
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
       <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 600 }}>
-        Pool
+        流动性池
       </Typography>
 
       <Paper
@@ -119,34 +117,20 @@ const PoolList = () => {
         <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-              Pool list
+              流动性池列表
             </Typography>
             
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                variant="outlined"
-                onClick={() => router.push('/positions')}
-                sx={{
-                  borderColor: 'divider',
-                  color: 'text.primary',
-                  textTransform: 'none',
-                  px: 3,
-                }}
-              >
-                My Positions
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => setAddModalOpen(true)}
-                sx={{
-                  textTransform: 'none',
-                  px: 3,
-                }}
-              >
-                Add Pool
-              </Button>
-            </Box>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => setAddModalOpen(true)}
+              sx={{
+                textTransform: 'none',
+                px: 3,
+              }}
+            >
+              添加流动性池
+            </Button>
           </Box>
         </Box>
 
@@ -154,11 +138,11 @@ const PoolList = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Token</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Fee tier</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Set price range</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Current price</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Liquidity</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>代币</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>费用等级</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>设置价格范围</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>当前价格</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>流动性</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

@@ -69,7 +69,7 @@ const AppHeader = () => {
             textDecoration: currentPath === '/' ? 'underline' : 'none',
           }}
         >
-          Swap
+          交换
         </Button>
         <Button 
           variant="text" 
@@ -80,18 +80,18 @@ const AppHeader = () => {
             textDecoration: currentPath === '/pool' ? 'underline' : 'none',
           }}
         >
-          Pool
+          流动性池
         </Button>
         <Button 
           variant="text" 
-          onClick={() => handleNavigation('/positions')}
+          onClick={() => handleNavigation('/explore')}
           sx={{ 
-            color: currentPath === '/positions' ? 'primary.main' : 'text.secondary',
-            fontWeight: currentPath === '/positions' ? 600 : 500,
-            textDecoration: currentPath === '/positions' ? 'underline' : 'none',
+            color: currentPath === '/explore' ? 'primary.main' : 'text.secondary',
+            fontWeight: currentPath === '/explore' ? 600 : 500,
+            textDecoration: currentPath === '/explore' ? 'underline' : 'none',
           }}
         >
-          Position
+          Explore
         </Button>
       </Box>
     </AppBar>

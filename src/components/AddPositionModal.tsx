@@ -96,7 +96,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
         pb: 2,
       }}>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          Add position
+          添加持仓
         </Typography>
         <IconButton onClick={onClose} size="small">
           <Close />
@@ -140,7 +140,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
           {/* Fee tier */}
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-              Fee tier
+              费用等级
             </Typography>
             <FormControl fullWidth>
               <Select
@@ -163,7 +163,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
           {/* Set price range */}
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-              Set price range
+              设置价格范围
             </Typography>
             
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
@@ -210,7 +210,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
           {/* Current price */}
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-              Current price
+              当前价格
             </Typography>
             
             <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
@@ -274,7 +274,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
             py: 1.5,
           }}
         >
-          Cancel
+          取消
         </Button>
         <Button
           onClick={handleCreate}
@@ -285,7 +285,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
             py: 1.5,
           }}
         >
-          Create
+          创建
         </Button>
       </DialogActions>
     </Dialog>
