@@ -60,7 +60,7 @@ const Explore: NextPage = () => {
             {/* 页面标题 */}
             <Box sx={{ mb: 3 }}>
               <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: 600, color: 'inherit' }}>
-                Explore
+                探索
               </h1>
             </Box>
 

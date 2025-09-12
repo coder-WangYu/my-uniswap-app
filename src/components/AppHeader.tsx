@@ -91,7 +91,7 @@ const AppHeader = () => {
             textDecoration: currentPath === '/explore' ? 'underline' : 'none',
           }}
         >
-          Explore
+          探索
         </Button>
       </Box>
     </AppBar>
