@@ -13,8 +13,16 @@ import {
   TablePagination,
   Chip,
   Avatar,
+  IconButton,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Alert,
 } from '@mui/material';
-import { Add } from '@mui/icons-material';
+import { Add, LocalFireDepartment, AttachMoney } from '@mui/icons-material';
 import AddPositionModal from './AddPositionModal';
 
 interface PoolData {
@@ -89,6 +97,13 @@ const PoolList = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [burnDialogOpen, setBurnDialogOpen] = useState(false);
+  const [collectDialogOpen, setCollectDialogOpen] = useState(false);
+  const [selectedPool, setSelectedPool] = useState<PoolData | null>(null);
+  const [burnAmount, setBurnAmount] = useState('');
+  const [collectAmount, setCollectAmount] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState(false);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -97,6 +112,58 @@ const PoolList = () => {
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const handleBurnClick = (pool: PoolData) => {
+    setSelectedPool(pool);
+    setBurnAmount(pool.liquidity);
+    setBurnDialogOpen(true);
+  };
+
+  const handleCollectClick = (pool: PoolData) => {
+    setSelectedPool(pool);
+    setCollectAmount('0.5'); // 模拟可收集的费用
+    setCollectDialogOpen(true);
+  };
+
+  const handleBurnConfirm = async () => {
+    if (!selectedPool || !burnAmount) return;
+    
+    setActionLoading(true);
+    try {
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setActionSuccess(true);
+      setTimeout(() => {
+        setBurnDialogOpen(false);
+        setActionSuccess(false);
+        setActionLoading(false);
+        setBurnAmount('');
+        setSelectedPool(null);
+      }, 1500);
+    } catch (error) {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCollectConfirm = async () => {
+    if (!selectedPool || !collectAmount) return;
+    
+    setActionLoading(true);
+    try {
+      // 模拟API调用
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setActionSuccess(true);
+      setTimeout(() => {
+        setCollectDialogOpen(false);
+        setActionSuccess(false);
+        setActionLoading(false);
+        setCollectAmount('');
+        setSelectedPool(null);
+      }, 1500);
+    } catch (error) {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -143,6 +210,7 @@ const PoolList = () => {
                 <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>设置价格范围</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>当前价格</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>流动性</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>操作</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -216,6 +284,40 @@ const PoolList = () => {
                         {pool.liquidity}
                       </Typography>
                     </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Tooltip title="销毁流动性">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleBurnClick(pool)}
+                            sx={{
+                              color: 'error.main',
+                              '&:hover': {
+                                backgroundColor: 'error.light',
+                                color: 'white',
+                              },
+                            }}
+                          >
+                            <LocalFireDepartment fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="收集费用">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleCollectClick(pool)}
+                            sx={{
+                              color: 'success.main',
+                              '&:hover': {
+                                backgroundColor: 'success.light',
+                                color: 'white',
+                              },
+                            }}
+                          >
+                            <AttachMoney fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
@@ -244,6 +346,98 @@ const PoolList = () => {
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
       />
+
+      {/* Burn Dialog */}
+      <Dialog open={burnDialogOpen} onClose={() => setBurnDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>销毁流动性</DialogTitle>
+        <DialogContent>
+          {selectedPool && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                代币对: {selectedPool.tokenPair.token1} / {selectedPool.tokenPair.token2}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                当前流动性: {selectedPool.liquidity}
+              </Typography>
+            </Box>
+          )}
+          <TextField
+            fullWidth
+            label="销毁数量"
+            value={burnAmount}
+            onChange={(e) => setBurnAmount(e.target.value)}
+            type="number"
+            sx={{ mb: 2 }}
+          />
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            警告：销毁流动性将永久移除您的流动性头寸，您将收到相应的代币。
+          </Alert>
+          {actionSuccess && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              流动性销毁成功！
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBurnDialogOpen(false)} disabled={actionLoading}>
+            取消
+          </Button>
+          <Button
+            onClick={handleBurnConfirm}
+            variant="contained"
+            color="error"
+            disabled={actionLoading || !burnAmount}
+          >
+            {actionLoading ? '处理中...' : '确认销毁'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Collect Dialog */}
+      <Dialog open={collectDialogOpen} onClose={() => setCollectDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>收集费用</DialogTitle>
+        <DialogContent>
+          {selectedPool && (
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                代币对: {selectedPool.tokenPair.token1} / {selectedPool.tokenPair.token2}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                可收集费用: {collectAmount} ETH
+              </Typography>
+            </Box>
+          )}
+          <TextField
+            fullWidth
+            label="收集数量"
+            value={collectAmount}
+            onChange={(e) => setCollectAmount(e.target.value)}
+            type="number"
+            sx={{ mb: 2 }}
+          />
+          <Alert severity="info" sx={{ mb: 2 }}>
+            收集费用将把您赚取的手续费转移到您的钱包中。
+          </Alert>
+          {actionSuccess && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              费用收集成功！
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCollectDialogOpen(false)} disabled={actionLoading}>
+            取消
+          </Button>
+          <Button
+            onClick={handleCollectConfirm}
+            variant="contained"
+            color="success"
+            disabled={actionLoading || !collectAmount}
+          >
+            {actionLoading ? '处理中...' : '确认收集'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
