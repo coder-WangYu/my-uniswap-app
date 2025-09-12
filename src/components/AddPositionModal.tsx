@@ -7,23 +7,27 @@ import {
   Button,
   Box,
   Typography,
-  TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Slider,
   IconButton,
   Avatar,
+  Divider,
+  FormControl,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
-import SwapInput from './SwapInput';
 
 interface Token {
   symbol: string;
   name: string;
   balance?: number;
   logo?: string;
+  price?: number;
+}
+
+interface FeeTier {
+  id: string;
+  fee: string;
+  isSelected?: boolean;
 }
 
 interface AddPositionModalProps {
@@ -32,45 +36,64 @@ interface AddPositionModalProps {
 }
 
 const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
-  const [fromValue, setFromValue] = useState<string>('0');
-  const [toValue, setToValue] = useState<string>('0');
-  const [feeTier, setFeeTier] = useState<string>('1.00%');
-  const [lowPrice, setLowPrice] = useState<string>('');
-  const [highPrice, setHighPrice] = useState<string>('');
-  const [priceRange, setPriceRange] = useState<number>(0);
-
-  const [fromToken, setFromToken] = useState<Token>({
+  const [selectedToken1, setSelectedToken1] = useState<Token>({
     symbol: 'ETH',
     name: 'Ethereum',
-    balance: 23.491
-  });
-  
-  const [toToken, setToToken] = useState<Token>({
-    symbol: 'XRP',
-    name: 'Ripple',
-    balance: 0
+    balance: 0,
+    price: 4500.05
   });
 
-  const handleMaxClick = () => {
-    if (fromToken.balance) {
-      setFromValue(fromToken.balance.toString());
+  const [selectedToken2, setSelectedToken2] = useState<Token>({
+    symbol: 'USDT',
+    name: 'Tether USD',
+    balance: 0,
+    price: 1.00
+  });
+
+  const [token1Amount, setToken1Amount] = useState<string>('1');
+  const [token2Amount, setToken2Amount] = useState<string>('4494.88095');
+
+  const [selectedFeeTier, setSelectedFeeTier] = useState<string>('0.05%');
+
+  const feeTiers: FeeTier[] = [
+    {
+      id: '0.05',
+      fee: '0.05%',
+      isSelected: true
+    },
+    {
+      id: '0.01',
+      fee: '0.01%'
+    },
+    {
+      id: '0.3',
+      fee: '0.3%'
+    },
+    {
+      id: '1',
+      fee: '1%'
     }
-  };
+  ];
 
   const handleCreate = () => {
-    console.log('Creating position with:', {
-      fromValue,
-      toValue,
-      feeTier,
-      lowPrice,
-      highPrice,
-      priceRange,
+    console.log('Creating liquidity pool with:', {
+      token1: selectedToken1,
+      token2: selectedToken2,
+      token1Amount,
+      token2Amount,
+      feeTier: selectedFeeTier,
     });
     onClose();
   };
 
-  const handlePriceRangeChange = (event: Event, newValue: number | number[]) => {
-    setPriceRange(newValue as number);
+  const calculateUSDValue = (amount: string, price: number) => {
+    const numAmount = parseFloat(amount) || 0;
+    return (numAmount * price).toLocaleString('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   };
 
   return (
@@ -78,14 +101,17 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
       open={open}
       onClose={onClose}
       maxWidth="sm"
-      fullWidth
+      fullWidth={false}
       PaperProps={{
         sx: {
           backgroundColor: 'background.paper',
           border: '1px solid',
           borderColor: 'divider',
           borderRadius: 3,
-          overflow: 'visible', // 确保弹窗内容不会被裁剪
+          maxHeight: '90vh',
+          overflow: 'hidden',
+          width: '480px',
+          maxWidth: '90vw',
         },
       }}
     >
@@ -96,7 +122,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
         pb: 2,
       }}>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          添加持仓
+          添加流动性池
         </Typography>
         <IconButton onClick={onClose} size="small">
           <Close />
@@ -106,156 +132,214 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
       <DialogContent sx={{ 
         px: 3, 
         py: 2,
-        overflow: 'visible', // 确保内容不会被裁剪
+        overflow: 'auto',
         '&.MuiDialogContent-root': {
-          overflow: 'visible',
+          overflow: 'auto',
         },
       }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Deposit amounts */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          
+          {/* 选择配对部分 */}
           <Box>
-            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-              Deposit amounts
+            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+              选择配对
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              选择你想要提供流动性的代币。你可以在所有支持的网络上选择代币。
             </Typography>
             
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <SwapInput
-                value={fromValue}
-                onChange={setFromValue}
-                token={fromToken}
-                onSelectToken={() => console.log('Select from token')}
-                showMax={true}
-                onMaxClick={handleMaxClick}
-              />
-              
-              <SwapInput
-                value={toValue}
-                onChange={setToValue}
-                token={toToken}
-                onSelectToken={() => console.log('Select to token')}
-              />
+            {/* 代币选择 */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+              {/* Token 1 */}
+              <Box>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  p: 2, 
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  }
+                }}>
+                  <Avatar sx={{ 
+                    width: 32, 
+                    height: 32, 
+                    mr: 2,
+                    backgroundColor: '#6366f1' // ETH purple color
+                  }}>
+                    E
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {selectedToken1.symbol}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ color: 'text.secondary' }}>
+                    ▼
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Token 2 */}
+              <Box>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  p: 2, 
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  }
+                }}>
+                  <Avatar sx={{ 
+                    width: 32, 
+                    height: 32, 
+                    mr: 2,
+                    backgroundColor: '#22c55e' // USDT green color
+                  }}>
+                    T
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {selectedToken2.symbol}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ color: 'text.secondary' }}>
+                    ▼
+                  </Box>
+                </Box>
+              </Box>
             </Box>
+
           </Box>
 
-          {/* Fee tier */}
+          {/* 费用等级部分 */}
           <Box>
-            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
               费用等级
             </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              通过提供流动性赚取的金额。选择适合你风险承受能力和投资策略的金额。
+            </Typography>
+            
+            {/* 费用等级下拉选择 */}
             <FormControl fullWidth>
               <Select
-                value={feeTier}
-                onChange={(e) => setFeeTier(e.target.value)}
+                value={selectedFeeTier}
+                onChange={(e) => setSelectedFeeTier(e.target.value)}
                 sx={{
                   borderRadius: 2,
                   '& .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'divider',
                   },
+                  '& .MuiSelect-select': {
+                    py: 2,
+                  },
                 }}
               >
-                <MenuItem value="0.05%">0.05%</MenuItem>
-                <MenuItem value="0.30%">0.30%</MenuItem>
-                <MenuItem value="1.00%">1.00%</MenuItem>
+                {feeTiers.map((tier) => (
+                  <MenuItem key={tier.id} value={tier.fee}>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {tier.fee}
+                    </Typography>
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
+
           </Box>
 
-          {/* Set price range */}
+          <Divider />
+
+          {/* 存入代币部分 */}
           <Box>
-            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-              设置价格范围
+            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+              存入代币
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              指定你的流动性资产贡献的代币金额。
             </Typography>
             
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-              <Box sx={{ flex: 1 }}>
-                <TextField
-                  fullWidth
-                  placeholder="0.00"
-                  value={lowPrice}
-                  onChange={(e) => setLowPrice(e.target.value)}
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                    },
-                  }}
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                  USDC per ETH
+            {/* Token 1 输入 */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              p: 2, 
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              mb: 2
+            }}>
+              <Box sx={{ flex: 1, mr: 2 }}>
+                <Typography variant="h5" sx={{ fontWeight: 600, color: 'error.main' }}>
+                  {token1Amount}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {calculateUSDValue(token1Amount, selectedToken1.price || 0)}
                 </Typography>
               </Box>
               
-              <Box sx={{ flex: 1 }}>
-                <TextField
-                  fullWidth
-                  placeholder="0.00"
-                  value={highPrice}
-                  onChange={(e) => setHighPrice(e.target.value)}
-                  variant="outlined"
-                  size="small"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                    },
-                  }}
-                />
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                  USDC per ETH
-                </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ 
+                  width: 32, 
+                  height: 32, 
+                  mr: 1,
+                  backgroundColor: '#6366f1'
+                }}>
+                  E
+                </Avatar>
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {selectedToken1.symbol}
+                  </Typography>
+                  <Typography variant="caption" color="error.main">
+                    0 {selectedToken1.symbol}
+                  </Typography>
+                </Box>
               </Box>
             </Box>
-          </Box>
 
-          {/* Current price */}
-          <Box>
-            <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-              当前价格
-            </Typography>
-            
-            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-              3,042.00
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-              USDC per ETH
-            </Typography>
-            
+            {/* Token 2 输入 */}
             <Box sx={{ 
-              px: 1, 
-              pb: 2, // 添加底部padding为值标签留出空间
-              overflow: 'visible', // 确保值标签可以显示
+              display: 'flex', 
+              alignItems: 'center', 
+              p: 2, 
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2
             }}>
-              <Slider
-                value={priceRange}
-                onChange={handlePriceRangeChange}
-                min={0}
-                max={8000}
-                step={100}
-                valueLabelDisplay="auto"
-                valueLabelFormat={(value) => `${value.toFixed(2)}`}
-                sx={{
-                  color: 'primary.main',
-                  '& .MuiSlider-thumb': {
-                    backgroundColor: 'primary.main',
-                  },
-                  '& .MuiSlider-track': {
-                    backgroundColor: 'primary.main',
-                  },
-                  '& .MuiSlider-valueLabel': {
-                    // 确保值标签不会超出容器
-                    '& .MuiSlider-valueLabelLabel': {
-                      fontSize: '0.75rem',
-                    },
-                  },
-                }}
-              />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                <Typography variant="caption" color="text.secondary">
-                  0.00
+              <Box sx={{ flex: 1, mr: 2 }}>
+                <Typography variant="h5" sx={{ fontWeight: 600, color: 'error.main' }}>
+                  {token2Amount}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  8000.00
+                  {calculateUSDValue(token2Amount, selectedToken2.price || 0)}
                 </Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Avatar sx={{ 
+                  width: 32, 
+                  height: 32, 
+                  mr: 1,
+                  backgroundColor: '#22c55e'
+                }}>
+                  T
+                </Avatar>
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {selectedToken2.symbol}
+                  </Typography>
+                  <Typography variant="caption" color="error.main">
+                    0 {selectedToken2.symbol}
+                  </Typography>
+                </Box>
               </Box>
             </Box>
           </Box>
@@ -285,7 +369,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
             py: 1.5,
           }}
         >
-          创建
+          创建流动性池
         </Button>
       </DialogActions>
     </Dialog>
