@@ -119,7 +119,9 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        pb: 2,
+        pb: 1,
+        px: 2,
+        pt: 2,
       }}>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
           添加流动性池
@@ -130,26 +132,26 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
       </DialogTitle>
 
       <DialogContent sx={{ 
-        px: 3, 
-        py: 2,
+        px: 2, 
+        py: 1,
         overflow: 'auto',
         '&.MuiDialogContent-root': {
           overflow: 'auto',
         },
       }}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           
           {/* 选择配对部分 */}
           <Box>
             <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
               选择配对
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               选择你想要提供流动性的代币。你可以在所有支持的网络上选择代币。
             </Typography>
             
             {/* 代币选择 */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {/* Token 1 */}
               <Box>
                 <Box sx={{ 
@@ -224,7 +226,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
             <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
               费用等级
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               通过提供流动性赚取的金额。选择适合你风险承受能力和投资策略的金额。
             </Typography>
             
@@ -262,7 +264,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
             <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
               存入代币
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               指定你的流动性资产贡献的代币金额。
             </Typography>
             
@@ -270,11 +272,11 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              p: 2, 
+              p: 1.5, 
               border: '1px solid',
               borderColor: 'divider',
               borderRadius: 2,
-              mb: 2
+              mb: 1.5
             }}>
               <Box sx={{ flex: 1, mr: 2 }}>
                 <Typography variant="h5" sx={{ fontWeight: 600, color: 'error.main' }}>
@@ -309,7 +311,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
             <Box sx={{ 
               display: 'flex', 
               alignItems: 'center', 
-              p: 2, 
+              p: 1.5, 
               border: '1px solid',
               borderColor: 'divider',
               borderRadius: 2
@@ -346,7 +348,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2, gap: 2 }}>
+      <DialogActions sx={{ px: 2, py: 1.5, gap: 1.5 }}>
         <Button
           onClick={onClose}
           variant="outlined"
