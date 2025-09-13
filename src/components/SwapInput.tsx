@@ -19,6 +19,7 @@ interface SwapInputProps {
   token: Token;
   onSelectToken: () => void;
   usdValue?: string;
+  showUsdValue?: boolean;
   showMax?: boolean;
   onMaxClick?: () => void;
   placeholder?: string;
@@ -30,6 +31,7 @@ const SwapInput = ({
   token,
   onSelectToken,
   usdValue,
+  showUsdValue = false,
   showMax = false,
   onMaxClick,
   placeholder = "0.00",
@@ -45,41 +47,67 @@ const SwapInput = ({
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-        <TextField
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          variant="standard"
-          InputProps={{
-            disableUnderline: true,
-            sx: {
-              fontSize: '2rem',
-              fontWeight: 600,
-              color: 'text.primary',
-            },
-          }}
-          sx={{
-            flex: 1,
-            '& .MuiInputBase-input': {
-              padding: 0,
-            },
-          }}
-        />
+        <Box sx={{ flex: 1 }}>
+          <TextField
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            variant="standard"
+            InputProps={{
+              disableUnderline: true,
+              sx: {
+                fontSize: '2rem',
+                fontWeight: 600,
+                color: 'text.primary',
+              },
+            }}
+            sx={{
+              width: '100%',
+              '& .MuiInputBase-input': {
+                padding: 0,
+              },
+            }}
+          />
+        </Box>
         
         <TokenSelector
           token={token}
           onSelect={onSelectToken}
-          showBalance={true}
-          showMax={showMax}
-          onMaxClick={onMaxClick}
+          showBalance={false}
+          showMax={false}
         />
       </Box>
       
-      {usdValue && (
-        <Typography variant="body2" color="text.secondary">
-          ${usdValue}
-        </Typography>
-      )}
+      {/* USD价值和余额对齐 */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {showUsdValue && usdValue && (
+          <Typography variant="body2" color="text.secondary">
+            US${usdValue}
+          </Typography>
+        )}
+        
+        {/* 余额显示 */}
+        {token.balance !== undefined && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              余额: {token.balance}
+            </Typography>
+            {showMax && (
+              <Typography 
+                variant="body2" 
+                color="primary.main"
+                sx={{ 
+                  cursor: 'pointer',
+                  '&:hover': { textDecoration: 'underline' }
+                }}
+                onClick={onMaxClick}
+              >
+                最大
+              </Typography>
+            )}
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };

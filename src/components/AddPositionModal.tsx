@@ -15,6 +15,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
+import TokenSelectorModal from './TokenSelectorModal';
 
 interface Token {
   symbol: string;
@@ -22,6 +23,8 @@ interface Token {
   balance?: number;
   logo?: string;
   price?: number;
+  address: string;
+  volume24h?: number;
 }
 
 interface FeeTier {
@@ -40,20 +43,27 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
     symbol: 'ETH',
     name: 'Ethereum',
     balance: 0,
-    price: 4500.05
+    price: 4500.05,
+    address: '0x0000000000000000000000000000000000000000',
+    volume24h: 1800000000,
   });
 
   const [selectedToken2, setSelectedToken2] = useState<Token>({
     symbol: 'USDT',
     name: 'Tether USD',
     balance: 0,
-    price: 1.00
+    price: 1.00,
+    address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+    volume24h: 2500000000,
   });
 
   const [token1Amount, setToken1Amount] = useState<string>('1');
   const [token2Amount, setToken2Amount] = useState<string>('4494.88095');
 
   const [selectedFeeTier, setSelectedFeeTier] = useState<string>('0.05%');
+
+  const [tokenSelectorOpen, setTokenSelectorOpen] = useState(false);
+  const [selectingToken, setSelectingToken] = useState<'token1' | 'token2'>('token1');
 
   const feeTiers: FeeTier[] = [
     {
@@ -94,6 +104,24 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
+  };
+
+  const handleSelectToken1 = () => {
+    setSelectingToken('token1');
+    setTokenSelectorOpen(true);
+  };
+
+  const handleSelectToken2 = () => {
+    setSelectingToken('token2');
+    setTokenSelectorOpen(true);
+  };
+
+  const handleTokenSelect = (token: Token) => {
+    if (selectingToken === 'token1') {
+      setSelectedToken1(token);
+    } else {
+      setSelectedToken2(token);
+    }
   };
 
   return (
@@ -154,25 +182,28 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               {/* Token 1 */}
               <Box>
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  p: 2, 
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                  }
-                }}>
+                <Box 
+                  onClick={handleSelectToken1}
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    p: 2, 
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                    }
+                  }}
+                >
                   <Avatar sx={{ 
                     width: 32, 
                     height: 32, 
                     mr: 2,
                     backgroundColor: '#6366f1' // ETH purple color
                   }}>
-                    E
+                    {selectedToken1.symbol.charAt(0)}
                   </Avatar>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
@@ -187,25 +218,28 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
 
               {/* Token 2 */}
               <Box>
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  p: 2, 
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 2,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                  }
-                }}>
+                <Box 
+                  onClick={handleSelectToken2}
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    p: 2, 
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                    }
+                  }}
+                >
                   <Avatar sx={{ 
                     width: 32, 
                     height: 32, 
                     mr: 2,
                     backgroundColor: '#22c55e' // USDT green color
                   }}>
-                    T
+                    {selectedToken2.symbol.charAt(0)}
                   </Avatar>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
@@ -374,6 +408,14 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
           创建流动性池
         </Button>
       </DialogActions>
+
+      <TokenSelectorModal
+        open={tokenSelectorOpen}
+        onClose={() => setTokenSelectorOpen(false)}
+        onSelectToken={handleTokenSelect}
+        currentToken={selectingToken === 'token1' ? selectedToken1 : selectedToken2}
+        title="选择代币"
+      />
     </Dialog>
   );
 };

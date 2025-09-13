@@ -75,19 +75,27 @@ const TokenSelector = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Avatar
-            sx={{
-              width: 24,
-              height: 24,
-              backgroundColor: 'primary.main',
-              fontSize: '0.75rem',
-            }}
-          >
-            {token.symbol.charAt(0)}
-          </Avatar>
-          <Typography variant="body1" fontWeight={600}>
-            {token.symbol}
-          </Typography>
+          {token.symbol ? (
+            <>
+              <Avatar
+                sx={{
+                  width: 24,
+                  height: 24,
+                  backgroundColor: 'primary.main',
+                  fontSize: '0.75rem',
+                }}
+              >
+                {token.symbol.charAt(0)}
+              </Avatar>
+              <Typography variant="body1" fontWeight={600}>
+                {token.symbol}
+              </Typography>
+            </>
+          ) : (
+            <Typography variant="body1" fontWeight={600} color="primary.main">
+              {token.name}
+            </Typography>
+          )}
         </Box>
       </Button>
     </Box>
