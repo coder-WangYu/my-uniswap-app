@@ -24,6 +24,8 @@ import {
 } from '@mui/material';
 import { Add, LocalFireDepartment, AttachMoney } from '@mui/icons-material';
 import AddPositionModal from './AddPositionModal';
+import { useUser } from '../hooks/useUser';
+import { useMessage } from '../contexts/MessageContext';
 
 interface PoolData {
   id: string;
@@ -104,6 +106,8 @@ const PoolList = () => {
   const [collectAmount, setCollectAmount] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState(false);
+  const { isWalletConnected, address } = useUser();
+  const message = useMessage();
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -166,6 +170,13 @@ const PoolList = () => {
     }
   };
 
+  function openAddModal() {
+    if(!isWalletConnected) {
+      return message.error('请先连接钱包')
+    }
+    setAddModalOpen(true)
+  }
+
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
       <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 600 }}>
@@ -190,7 +201,7 @@ const PoolList = () => {
             <Button
               variant="contained"
               startIcon={<Add />}
-              onClick={() => setAddModalOpen(true)}
+              onClick={() => openAddModal()}
               sx={{
                 textTransform: 'none',
                 px: 3,

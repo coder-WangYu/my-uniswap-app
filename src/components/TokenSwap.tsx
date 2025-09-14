@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Paper,
   Typography,
@@ -12,6 +12,7 @@ import SwapButton from './SwapButton';
 import SwapToggle from './SwapToggle';
 import TokenSelectorModal from './TokenSelectorModal';
 import { tokensConfig } from '../libs/contracts';
+import { useUser } from '../hooks/useUser';
 
 interface Token {
   symbol: string;
@@ -40,6 +41,7 @@ const TokenSwap = () => {
   });
   const [tokenSelectorOpen, setTokenSelectorOpen] = useState(false);
   const [selectingToken, setSelectingToken] = useState<'from' | 'to'>('from');
+  const { address, isWalletConnected } = useUser();
 
   const handleSwapTokens = () => {
     const tempToken = fromToken;
@@ -82,6 +84,14 @@ const TokenSwap = () => {
 
   // 动态计算按钮文本和状态
   const { buttonText, isDisabled, errorMessage } = useMemo(() => {
+    if(!isWalletConnected) {
+      return {
+        buttonText: '点右上角连接钱包',
+        isDisabled: true,
+        errorMessage: null
+      };
+    }
+
     const fromAmount = parseFloat(fromValue) || 0;
     
     // 如果购买代币未选择
@@ -117,7 +127,7 @@ const TokenSwap = () => {
       isDisabled: false,
       errorMessage: null
     };
-  }, [fromValue, fromToken.balance, fromToken.symbol, toToken.symbol]);
+  }, [isWalletConnected, fromValue, fromToken.balance, fromToken.symbol, toToken.symbol]);
 
   return (
     <Paper
