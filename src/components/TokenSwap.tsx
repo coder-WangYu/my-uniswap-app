@@ -41,7 +41,7 @@ const TokenSwap = () => {
   });
   const [tokenSelectorOpen, setTokenSelectorOpen] = useState(false);
   const [selectingToken, setSelectingToken] = useState<'from' | 'to'>('from');
-  const { address, isWalletConnected } = useUser();
+  const { address, isConnected } = useUser();
 
   const handleSwapTokens = () => {
     const tempToken = fromToken;
@@ -84,7 +84,7 @@ const TokenSwap = () => {
 
   // 动态计算按钮文本和状态
   const { buttonText, isDisabled, errorMessage } = useMemo(() => {
-    if(!isWalletConnected) {
+    if(!isConnected) {
       return {
         buttonText: '点右上角连接钱包',
         isDisabled: true,
@@ -127,7 +127,7 @@ const TokenSwap = () => {
       isDisabled: false,
       errorMessage: null
     };
-  }, [isWalletConnected, fromValue, fromToken.balance, fromToken.symbol, toToken.symbol]);
+  }, [isConnected, fromValue, fromToken.balance, fromToken.symbol, toToken.symbol]);
 
   return (
     <Paper

@@ -3,6 +3,7 @@ import {
   sepolia,
 } from 'wagmi/chains';
 import { http } from 'wagmi';
+import "dotenv/config";
 
 export const config = getDefaultConfig({
   appName: 'MyUniswap',
@@ -11,7 +12,7 @@ export const config = getDefaultConfig({
     sepolia
   ],
   transports: {
-    [sepolia.id]: http("https://sepolia.infura.io/v3/bd53db44b045458e827701c6bc02a161")
+    [sepolia.id]: http(process.env.NEXT_PUBLIC_INFURA_URL)
   },
   ssr: true,
 });

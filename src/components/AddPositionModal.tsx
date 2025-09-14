@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { Close, ArrowForward, ArrowBack } from '@mui/icons-material';
 import TokenSelectorModal from './TokenSelectorModal';
+import { useUser } from '../hooks/useUser';
 
 interface Token {
   symbol: string;
@@ -66,6 +67,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
   const [currentPage, setCurrentPage] = useState<'pair' | 'deposit'>('pair');
   const [tickLower, setTickLower] = useState<string>('0');
   const [tickUpper, setTickUpper] = useState<string>('0');
+  const { address } = useUser();
 
   const feeTiers: FeeTier[] = [
     {
@@ -126,22 +128,15 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
   };
 
   const handleNextPage = () => {
+    // 获取账户代币数量
+    
+
     setCurrentPage('deposit');
   };
 
   const handlePrevPage = () => {
     setCurrentPage('pair');
   };
-
-  // 获取当前报价
-  function getTokensQuote() {
-    console.log(token1Amount, token2Amount, tickLower, tickUpper);
-    console.log(selectedToken1, selectedToken2, selectedFeeTier);
-  }
-
-  useEffect(() => {
-    getTokensQuote()
-  }, [token1Amount, token2Amount, tickLower, tickUpper])
 
   return (
     <Dialog
@@ -596,4 +591,4 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
   );
 };
 
-export default AddPositionModal;
+export default AddPositionModal; 
