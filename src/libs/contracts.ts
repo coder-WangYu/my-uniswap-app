@@ -112,6 +112,3 @@ export const NETWORK_CONFIG = {
 
 // 默认滑点配置
 export const DEFAULT_SLIPPAGE = 0.5 // 0.5%
-
-// 费率选项
-export const FEE_TIERS = [500, 3000, 10000] // 0.05%, 0.3%, 1% 
