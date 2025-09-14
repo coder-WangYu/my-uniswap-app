@@ -1,10 +1,11 @@
 interface Token {
+  address: string;
   symbol: string;
   name: string;
+  decimals: number;
   balance?: number;
   logo?: string;
   price?: number;
-  address: string;
   volume24h?: number;
 }
 

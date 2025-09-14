@@ -20,16 +20,7 @@ import {
 } from "@mui/material";
 import { Close, Search, TrendingUp } from "@mui/icons-material";
 import { tokensConfig } from "../libs/contracts";
-
-interface Token {
-  symbol: string;
-  name: string;
-  address: string;
-  balance?: number;
-  logo?: string;
-  price?: number;
-  volume24h?: number;
-}
+import { Token } from "../interfaces";
 
 interface TokenSelectorModalProps {
   open: boolean;
@@ -44,6 +35,7 @@ const mockTokens: Token[] = Object.values(tokensConfig).map((tokenConfig) => ({
   symbol: tokenConfig.symbol,
   name: tokenConfig.name,
   address: tokenConfig.address,
+  decimals: tokenConfig.decimals,
   balance: 0, // 默认余额为0，实际使用时需要从合约获取
   price: 1.0, // 默认价格，实际使用时需要从价格API获取
   volume24h: 1000000, // 默认24小时交易量
@@ -140,9 +132,7 @@ const TokenSelectorModal = ({
           pt: 2,
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          {title}
-        </Typography>
+        {title}
         <IconButton onClick={onClose} size="small">
           <Close />
         </IconButton>

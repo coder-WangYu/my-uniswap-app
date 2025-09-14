@@ -106,7 +106,7 @@ const PoolList = () => {
   const [collectAmount, setCollectAmount] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState(false);
-  const { isConnected, address } = useUser();
+  const { isWalletConnected, address } = useUser();
   const message = useMessage();
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -171,7 +171,7 @@ const PoolList = () => {
   };
 
   function openAddModal() {
-    if(!isConnected) {
+    if(!isWalletConnected) {
       return message.error('请先连接钱包')
     }
     setAddModalOpen(true)

@@ -13,16 +13,7 @@ import SwapToggle from './SwapToggle';
 import TokenSelectorModal from './TokenSelectorModal';
 import { tokensConfig } from '../libs/contracts';
 import { useUser } from '../hooks/useUser';
-
-interface Token {
-  symbol: string;
-  name: string;
-  balance?: number;
-  logo?: string;
-  address: string;
-  price?: number;
-  volume24h?: number;
-}
+import { Token } from '../interfaces';
 
 const TokenSwap = () => {
   const [fromValue, setFromValue] = useState<string>('0');
@@ -36,6 +27,7 @@ const TokenSwap = () => {
     symbol: '',
     name: '选择代币',
     address: '',
+    decimals: 18,
     balance: 0,
     price: 0,
   });

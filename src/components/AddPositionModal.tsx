@@ -19,6 +19,9 @@ import { Close, ArrowForward, ArrowBack } from "@mui/icons-material";
 import TokenSelectorModal from "./TokenSelectorModal";
 import { useUser } from "../hooks/useUser";
 import { Token } from "../interfaces";
+import { message } from "antd";
+import { useCreatePool } from "../hooks/useCreatePool";
+import { tokensConfig } from "../libs/contracts";
 
 interface FeeTier {
   id: string;
@@ -33,22 +36,10 @@ interface AddPositionModalProps {
 }
 
 const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
-  const [selectedToken1, setSelectedToken1] = useState<Token>({
-    symbol: "ETH",
-    name: "Ethereum",
-    balance: 0,
-    price: 4500.05,
-    address: "0x0000000000000000000000000000000000000000",
-    volume24h: 1800000000,
-  });
-  const [selectedToken2, setSelectedToken2] = useState<Token>({
-    symbol: "USDT",
-    name: "Tether USD",
-    balance: 0,
-    price: 1.0,
-    address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-    volume24h: 2500000000,
-  });
+  const [selectedToken1, setSelectedToken1] = useState<Token>(tokensConfig.ETH);
+  const [selectedToken2, setSelectedToken2] = useState<Token>(
+    tokensConfig.WYTokenA
+  );
 
   const [token1Amount, setToken1Amount] = useState<string>("0");
   const [token2Amount, setToken2Amount] = useState<string>("0");
@@ -63,6 +54,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
   const [token1Balance, setToken1Balance] = useState<number>(0);
   const [token2Balance, setToken2Balance] = useState<number>(0);
   const { getTokenBalance } = useUser();
+  const { createPool } = useCreatePool();
 
   const feeTiers: FeeTier[] = [
     {
@@ -83,15 +75,36 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
     },
   ];
 
-  const handleCreate = () => {
+  // 重置所有状态
+  const resetModal = () => {
+    setCurrentPage("pair");
+    setToken1Balance(0);
+    setToken2Balance(0);
+    setToken1Amount("0");
+    setToken2Amount("0");
+    setSelectedFeeTier("0.05%");
+    setTickLower("0");
+    setTickUpper("0");
+  };
+
+  // 处理关闭窗口
+  const handleClose = () => {
+    resetModal();
+    onClose();
+  };
+
+  const handleCreate = async () => {
     console.log("Creating liquidity pool with:", {
       token1: selectedToken1,
       token2: selectedToken2,
       token1Amount,
       token2Amount,
-      feeTier: selectedFeeTier,
+      tickLower,
+      tickUpper,
+      fee: selectedFeeTier,
     });
-    onClose();
+
+    handleClose();
   };
 
   const calculateUSDValue = (amount: string, price: number) => {
@@ -123,24 +136,37 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
   };
 
   const handleNextPage = async () => {
-    setCurrentPage("deposit");
+    try {
+      // 创建池子pool
+      const fee = feeTiers.filter((item) => item.fee === selectedFeeTier)[0].value;
+      const res = await createPool(selectedToken1, selectedToken2, fee);
 
-    // 获取账户代币数量
-    const balance1 = await getTokenBalance(selectedToken1);
-    const balance2 = await getTokenBalance(selectedToken2);
+      if (res === "success") {
+        // 获取账户代币数量
+        const balance1 = await getTokenBalance(selectedToken1);
+        const balance2 = await getTokenBalance(selectedToken2);
 
-    setToken1Balance(balance1 ? Number(balance1) : 0);
-    setToken2Balance(balance2 ? Number(balance2) : 0);
+        setToken1Balance(balance1 ? Number(balance1) : 0);
+        setToken2Balance(balance2 ? Number(balance2) : 0);
+
+        setCurrentPage("deposit");
+      }
+    } catch (error) {
+      message.error(error as string);
+    }
   };
 
   const handlePrevPage = () => {
     setCurrentPage("pair");
+    // 返回第一页时重置余额
+    setToken1Balance(0);
+    setToken2Balance(0);
   };
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       maxWidth="sm"
       fullWidth={false}
       PaperProps={{
@@ -166,10 +192,8 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
           pt: 2,
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          添加流动性池
-        </Typography>
-        <IconButton onClick={onClose} size="small">
+        添加流动性池
+        <IconButton onClick={handleClose} size="small">
           <Close />
         </IconButton>
       </DialogTitle>
@@ -279,6 +303,9 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 通过提供流动性赚取的金额。选择适合你风险承受能力和投资策略的金额。
+                <span style={{ color: "red" }}>
+                  初始价格比率: 1:1 (可在创建后通过添加流动性调整)
+                </span>
               </Typography>
 
               {/* 费用等级下拉选择 */}
@@ -554,7 +581,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
           // 第一页：显示取消和下一步按钮
           <>
             <Button
-              onClick={onClose}
+              onClick={handleClose}
               variant="outlined"
               sx={{
                 flex: 1,
