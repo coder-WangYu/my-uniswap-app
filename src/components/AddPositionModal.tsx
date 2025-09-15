@@ -18,10 +18,10 @@ import {
 import { Close, ArrowForward, ArrowBack } from "@mui/icons-material";
 import TokenSelectorModal from "./TokenSelectorModal";
 import { useUser } from "../hooks/useUser";
-import { Token } from "../interfaces";
+import { Token, Pool } from "../interfaces";
 import { message } from "antd";
-import { useCreatePool } from "../hooks/useCreatePool";
 import { tokensConfig } from "../libs/contracts";
+import { usePoolManager } from "../hooks/usePoolManager";
 
 interface FeeTier {
   id: string;
@@ -41,20 +41,34 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
     tokensConfig.WYTokenA
   );
 
-  const [token1Amount, setToken1Amount] = useState<string>("0");
-  const [token2Amount, setToken2Amount] = useState<string>("0");
+  const [fromAmount, setFromAmount] = useState<string>("0");
+  const [toAmount, setToAmount] = useState<string>("0");
   const [selectedFeeTier, setSelectedFeeTier] = useState<string>("0.05%");
   const [tokenSelectorOpen, setTokenSelectorOpen] = useState(false);
   const [selectingToken, setSelectingToken] = useState<"token1" | "token2">(
     "token1"
   );
-  const [currentPage, setCurrentPage] = useState<"pair" | "deposit">("pair");
+  const [currentPage, setCurrentPage] = useState<"pair" | "deposit">("deposit");
   const [tickLower, setTickLower] = useState<string>("0");
   const [tickUpper, setTickUpper] = useState<string>("0");
   const [token1Balance, setToken1Balance] = useState<number>(0);
   const [token2Balance, setToken2Balance] = useState<number>(0);
+  const [currentCalculate, setCurrentCalculate] = useState<string>("");
+  const [currentPool, setCurrentPool] = useState<Pool | null>({
+    fee: 500,
+    feeProtocol: 0,
+    index: 0,
+    liquidity: 0n,
+    pool: "0xC5bcd30119633a8e965Be65635B1cFFd62f75bF3",
+    sqrtPriceX96: 79228162514264337593543950336n,
+    tick: 0,
+    tickLower: -60,
+    tickUpper: 60,
+    token0: "0xc5C45CAe44dA4eD5F767d38ADBa00C7B56125fDa",
+    token1: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  });
   const { getTokenBalance } = useUser();
-  const { createPool } = useCreatePool();
+  const { createPool, getPool } = usePoolManager();
 
   const feeTiers: FeeTier[] = [
     {
@@ -80,8 +94,8 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
     setCurrentPage("pair");
     setToken1Balance(0);
     setToken2Balance(0);
-    setToken1Amount("0");
-    setToken2Amount("0");
+    setFromAmount("0");
+    setToAmount("0");
     setSelectedFeeTier("0.05%");
     setTickLower("0");
     setTickUpper("0");
@@ -91,20 +105,6 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
   const handleClose = () => {
     resetModal();
     onClose();
-  };
-
-  const handleCreate = async () => {
-    console.log("Creating liquidity pool with:", {
-      token1: selectedToken1,
-      token2: selectedToken2,
-      token1Amount,
-      token2Amount,
-      tickLower,
-      tickUpper,
-      fee: selectedFeeTier,
-    });
-
-    handleClose();
   };
 
   const calculateUSDValue = (amount: string, price: number) => {
@@ -136,9 +136,29 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
   };
 
   const handleNextPage = async () => {
+    userCreatePool();
+
+    setCurrentPage("deposit");
+  };
+
+  const handleCreate = () => {
+    userAddLiquidity();
+
+    // handleClose();
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage("pair");
+    // 返回第一页时重置余额
+    setToken1Balance(0);
+    setToken2Balance(0);
+  };
+
+  // 创建池子pool
+  async function userCreatePool() {
     try {
-      // 创建池子pool
-      const fee = feeTiers.filter((item) => item.fee === selectedFeeTier)[0].value;
+      const fee = feeTiers.filter((item) => item.fee === selectedFeeTier)[0]
+        .value;
       const res = await createPool(selectedToken1, selectedToken2, fee);
 
       if (res === "success") {
@@ -149,19 +169,38 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
         setToken1Balance(balance1 ? Number(balance1) : 0);
         setToken2Balance(balance2 ? Number(balance2) : 0);
 
-        setCurrentPage("deposit");
+        // 获取当前池子
+        const pool = await getPool(selectedToken1, selectedToken2, fee);
+        setCurrentPool(pool as Pool);
       }
     } catch (error) {
       message.error(error as string);
     }
-  };
+  }
 
-  const handlePrevPage = () => {
-    setCurrentPage("pair");
-    // 返回第一页时重置余额
-    setToken1Balance(0);
-    setToken2Balance(0);
-  };
+  // 添加流动性
+  async function userAddLiquidity() {
+
+  }
+
+  useEffect(() => {
+    setCurrentCalculate('fromAmount')
+    // 更新toAmount
+  }, [fromAmount]);
+
+  useEffect(() => {
+    setCurrentCalculate('toAmount')
+    // 更新fromAmount
+  }, [toAmount]);
+
+  useEffect(() => {
+    console.log(currentCalculate)
+    if (currentCalculate === 'fromAmount') {
+      // 更新fromAmount
+    } else {
+      // 更新toAmount
+    }
+  }, [tickLower, tickUpper]);
 
   return (
     <Dialog
@@ -471,8 +510,8 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
               >
                 <Box sx={{ flex: 1, mr: 2 }}>
                   <TextField
-                    value={token1Amount}
-                    onChange={(e) => setToken1Amount(e.target.value)}
+                    value={fromAmount}
+                    onChange={(e) => setFromAmount(e.target.value)}
                     variant="standard"
                     InputProps={{
                       disableUnderline: true,
@@ -489,7 +528,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary">
-                    {calculateUSDValue(token1Amount, selectedToken1.price || 0)}
+                    {calculateUSDValue(fromAmount, selectedToken1.price || 0)}
                   </Typography>
                 </Box>
 
@@ -528,8 +567,8 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
               >
                 <Box sx={{ flex: 1, mr: 2 }}>
                   <TextField
-                    value={token2Amount}
-                    onChange={(e) => setToken2Amount(e.target.value)}
+                    value={toAmount}
+                    onChange={(e) => setToAmount(e.target.value)}
                     variant="standard"
                     InputProps={{
                       disableUnderline: true,
@@ -546,7 +585,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary">
-                    {calculateUSDValue(token2Amount, selectedToken2.price || 0)}
+                    {calculateUSDValue(toAmount, selectedToken2.price || 0)}
                   </Typography>
                 </Box>
 

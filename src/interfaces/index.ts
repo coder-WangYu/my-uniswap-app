@@ -9,6 +9,21 @@ interface Token {
   volume24h?: number;
 }
 
+interface Pool {
+  fee: number;
+  feeProtocol: number;
+  index: number;
+  liquidity: BigInt;
+  pool: string;
+  sqrtPriceX96: BigInt;
+  tick: number;
+  tickLower: number;
+  tickUpper: number;
+  token0: string;
+  token1: string;
+}
+
 export type { 
   Token,
+  Pool,
 };

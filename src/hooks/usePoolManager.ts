@@ -1,8 +1,10 @@
-import { Token } from "../interfaces";
+import { Token, Pool } from "../interfaces";
 import { message } from "antd";
 import { useUser } from "./useUser";
-import { useContracts } from "./useContracts";
 import { useLoading } from "../contexts/LoadingContext";
+import { useWalletClient } from "wagmi";
+import { getContract } from "viem";
+import { contractsConfig } from "../libs/contracts";
 
 // Uniswap V3 价格计算相关常量
 const Q96 = BigInt(2) ** BigInt(96);
@@ -37,20 +39,29 @@ const sortTokens = (tokenA: string, tokenB: string) => {
     : [tokenB, tokenA];
 };
 
-export const useCreatePool = () => {
+export const usePoolManager = () => {
   const { client } = useUser();
-  const { poolManager } = useContracts();
   const { setLoading } = useLoading();
+  const { data: walletClient } = useWalletClient();
 
+  if (!walletClient)
+    return {
+      createPool: () => Promise.resolve("failed"),
+      getPool: () => Promise.resolve("failed"),
+    };
+
+  const poolManager = getContract({
+    address: contractsConfig.poolManager.address as `0x${string}`,
+    abi: contractsConfig.poolManager.abi,
+    client: walletClient,
+  });
+
+  // 创建池子
   const createPool = async (tokenA: Token, tokenB: Token, fee: number) => {
     try {
       // 立即切换到loading状态
       setLoading(true, "正在创建流动性池...");
-      
-      if (!poolManager) {
-        setLoading(false);
-        return message.error("请先连接钱包");
-      }
+
       // 计算初始价格 (1:1 比率)
       const sqrtPriceX96 = encodePriceSqrt(
         BigInt(10) ** BigInt(tokenA.decimals), // reserve1
@@ -61,7 +72,7 @@ export const useCreatePool = () => {
       const { tickLower, tickUpper } = getTickRange(fee);
 
       // 确保 token0 < token1 (Uniswap V3 约定)
-      const [token0, token1] = sortTokens(tokenA.address, tokenB.address)
+      const [token0, token1] = sortTokens(tokenA.address, tokenB.address);
 
       // 构造创建池子的参数
       const createParams = {
@@ -75,20 +86,20 @@ export const useCreatePool = () => {
 
       // 更新loading文本
       setLoading(true, "正在提交交易...");
-      
+
       const hash = await poolManager.write.createAndInitializePoolIfNecessary([
         createParams,
       ]);
-      
+
       // 更新loading文本
       setLoading(true, "等待交易确认...");
-      
+
       const tx = await client.waitForTransactionReceipt({ hash });
-      
+
       // 关闭loading
       setLoading(false);
-      
-      if (tx.status === 'success') {
+
+      if (tx.status === "success") {
         message.success("池子创建成功！");
         return "success";
       } else {
@@ -98,12 +109,30 @@ export const useCreatePool = () => {
     } catch (error: any) {
       // 关闭loading
       setLoading(false);
-      message.error(`创建池子失败: ${error.message || '未知错误'}`);
+      message.error(`创建池子失败: ${error.message || "未知错误"}`);
       return "failed";
+    }
+  };
+
+  // 获取池子
+  const getPool = async (tokenA: Token, tokenB: Token, fee: number) => {
+    // 确保 token0 < token1 (Uniswap V3 约定)
+    const [token0, token1] = sortTokens(tokenA.address, tokenB.address);
+    try {
+      const pools = (await poolManager.read.getAllPools()) as Pool[];
+      const pool = pools.find(
+        (pool: Pool) =>
+          pool.token0 === token0 && pool.token1 === token1 && pool.fee === fee
+      );
+
+      return pool;
+    } catch (error: any) {
+      return null;
     }
   };
 
   return {
     createPool,
+    getPool,
   };
 };
