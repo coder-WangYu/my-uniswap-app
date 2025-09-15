@@ -124,7 +124,6 @@ export const usePoolManager = () => {
         (pool: Pool) =>
           pool.token0 === token0 && pool.token1 === token1 && pool.fee === fee
       );
-
       return pool;
     } catch (error: any) {
       return null;
