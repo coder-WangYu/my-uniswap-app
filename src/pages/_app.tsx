@@ -10,6 +10,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import { config } from '../wagmi';
 import { MessageProvider } from '../contexts/MessageContext';
+import { LoadingProvider } from '../contexts/LoadingContext';
 import { lightTheme } from '../theme/theme';
 
 const client = new QueryClient();
@@ -22,7 +23,9 @@ function MyApp({ Component, pageProps }: AppProps) {
           <ThemeProvider theme={lightTheme}>
             <CssBaseline />
             <MessageProvider>
-              <Component {...pageProps} />
+              <LoadingProvider>
+                <Component {...pageProps} />
+              </LoadingProvider>
             </MessageProvider>
           </ThemeProvider>
         </RainbowKitProvider>

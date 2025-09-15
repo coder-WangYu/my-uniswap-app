@@ -2,6 +2,7 @@ import { Token } from "../interfaces";
 import { message } from "antd";
 import { useUser } from "./useUser";
 import { useContracts } from "./useContracts";
+import { useLoading } from "../contexts/LoadingContext";
 
 // Uniswap V3 价格计算相关常量
 const Q96 = BigInt(2) ** BigInt(96);
@@ -39,10 +40,15 @@ const sortTokens = (tokenA: string, tokenB: string) => {
 export const useCreatePool = () => {
   const { client } = useUser();
   const { poolManager } = useContracts();
+  const { setLoading } = useLoading();
 
   const createPool = async (tokenA: Token, tokenB: Token, fee: number) => {
     try {
+      // 立即切换到loading状态
+      setLoading(true, "正在创建流动性池...");
+      
       if (!poolManager) {
+        setLoading(false);
         return message.error("请先连接钱包");
       }
       // 计算初始价格 (1:1 比率)
@@ -67,13 +73,33 @@ export const useCreatePool = () => {
         sqrtPriceX96: sqrtPriceX96,
       };
 
+      // 更新loading文本
+      setLoading(true, "正在提交交易...");
+      
       const hash = await poolManager.write.createAndInitializePoolIfNecessary([
         createParams,
       ]);
+      
+      // 更新loading文本
+      setLoading(true, "等待交易确认...");
+      
       const tx = await client.waitForTransactionReceipt({ hash });
-      return tx.status
+      
+      // 关闭loading
+      setLoading(false);
+      
+      if (tx.status === 'success') {
+        message.success("池子创建成功！");
+        return "success";
+      } else {
+        message.error("交易失败");
+        return "failed";
+      }
     } catch (error: any) {
-      throw new error
+      // 关闭loading
+      setLoading(false);
+      message.error(`创建池子失败: ${error.message || '未知错误'}`);
+      return "failed";
     }
   };
 
