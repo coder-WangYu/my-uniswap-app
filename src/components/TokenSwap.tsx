@@ -33,8 +33,9 @@ const TokenSwap = () => {
   });
   const [tokenSelectorOpen, setTokenSelectorOpen] = useState(false);
   const [selectingToken, setSelectingToken] = useState<"from" | "to">("from");
+  const [executeToken, setExecuteToken] = useState<"from" | "to">("from");
   const { isConnected, getTokenBalance } = useUser();
-  const { quoteAmountOut, quoteAmountIn } = useSwapRouter();
+  const { quoteAmountOut, quoteAmountIn, executeSwap } = useSwapRouter();
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const message = useMessage();
 
@@ -57,16 +58,34 @@ const TokenSwap = () => {
     setToAmount(tempValue);
   };
 
-  const handleSwap = () => {
-    console.log(
-      "Swapping",
-      fromAmount.amount,
-      fromAmount.token.symbol,
-      "for",
-      toAmount.amount,
-      toAmount.token.symbol
-    );
-    // 这里将来可以添加实际的交换逻辑
+  // 处理代币交换
+  const handleSwap = async () => {
+    let result = ""
+
+    if (executeToken === "from") {
+      result = await executeSwap(
+        fromToken.address,
+        toToken.address,
+        fromAmount.amount,
+        executeToken
+      );
+    } else {
+      result = await executeSwap(
+        fromToken.address,
+        toToken.address,
+        toAmount.amount,
+        executeToken
+      );
+    }
+
+    if(result === "success") {
+      message.success("交易成功");
+      
+      // 重新获取当前代币余额
+      await getBalance()
+    } else {
+      message.error("交易失败");
+    }
   };
 
   const handleMaxClick = () => {
@@ -101,6 +120,7 @@ const TokenSwap = () => {
 
   // 处理fromAmount的amount变化
   const handlefromAmountChange = async (amount: string) => {
+    setExecuteToken("from");
     setFromAmount((prev) => ({ ...prev, amount }));
 
     if (!amount || parseFloat(amount) === 0) {
@@ -115,7 +135,11 @@ const TokenSwap = () => {
     // 防抖
     debounceTimer.current = setTimeout(async () => {
       try {
-        const amountOut = await quoteAmountOut(fromToken.address, toToken.address, amount);
+        const amountOut = await quoteAmountOut(
+          fromToken.address,
+          toToken.address,
+          amount
+        );
         if (amountOut) {
           setToAmount((prev) => ({ ...prev, amount: amountOut.toString() }));
         }
@@ -127,6 +151,7 @@ const TokenSwap = () => {
 
   // 处理toAmount的amount变化
   const handletoAmountChange = (amount: string) => {
+    setExecuteToken("to");
     setToAmount((prev) => ({ ...prev, amount }));
 
     if (!amount || parseFloat(amount) === 0) {
@@ -141,7 +166,11 @@ const TokenSwap = () => {
     // 防抖
     debounceTimer.current = setTimeout(async () => {
       try {
-        const amountIn = await quoteAmountIn(fromToken.address, toToken.address, amount);
+        const amountIn = await quoteAmountIn(
+          fromToken.address,
+          toToken.address,
+          amount
+        );
         if (amountIn) {
           setFromAmount((prev) => ({ ...prev, amount: amountIn.toString() }));
         }
