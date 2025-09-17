@@ -114,7 +114,18 @@ export const usePoolManager = () => {
     }
   };
 
-  // 获取池子
+  // 获取所有池子
+  const getPools = async (tokenA: string, tokenB: string) => {
+    // 确保 token0 < token1 (Uniswap V3 约定)
+    const [token0, token1] = sortTokens(tokenA, tokenB);
+    const allPools = (await poolManager.read.getAllPools()) as Pool[];
+    const pools = allPools.filter(
+      (pool: Pool) => pool.token0 === token0 && pool.token1 === token1
+    );
+    return pools;
+  };
+
+  // 获取当前池子
   const getPool = async (tokenA: Token, tokenB: Token, fee: number) => {
     // 确保 token0 < token1 (Uniswap V3 约定)
     const [token0, token1] = sortTokens(tokenA.address, tokenB.address);
@@ -132,6 +143,7 @@ export const usePoolManager = () => {
 
   return {
     createPool,
+    getPools,
     getPool,
   };
 };

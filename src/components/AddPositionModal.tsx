@@ -18,7 +18,7 @@ import {
 import { Close, ArrowForward, ArrowBack } from "@mui/icons-material";
 import TokenSelectorModal from "./TokenSelectorModal";
 import { useUser } from "../hooks/useUser";
-import { Token, Pool, QuoteParams, PositionParams } from "../interfaces";
+import { Token, Pool, PositionParams } from "../interfaces";
 import { message } from "antd";
 import { tokensConfig } from "../libs/contracts";
 import { usePoolManager } from "../hooks/usePoolManager";

@@ -23,13 +23,6 @@ interface Pool {
   token1: string;
 }
 
-interface QuoteParams {
-  tokenIn: string;
-  tokenOut: string;
-  amountIn: bigint;
-  sqrtPriceLimitX96: bigint;
-}
-
 interface PositionParams {
   token0: string;
   token1: string;
@@ -43,6 +36,5 @@ interface PositionParams {
 export type { 
   Token,
   Pool,
-  QuoteParams,
   PositionParams,
 };

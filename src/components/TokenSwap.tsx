@@ -1,125 +1,234 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import {
-  Paper,
-  Typography,
-  Box,
-  Alert,
-  Link,
-} from '@mui/material';
-import { Warning, Info } from '@mui/icons-material';
-import SwapInput from './SwapInput';
-import SwapButton from './SwapButton';
-import SwapToggle from './SwapToggle';
-import TokenSelectorModal from './TokenSelectorModal';
-import { tokensConfig } from '../libs/contracts';
-import { useUser } from '../hooks/useUser';
-import { Token } from '../interfaces';
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { Paper, Typography, Box, Alert, Link } from "@mui/material";
+import { Warning, Info } from "@mui/icons-material";
+import SwapInput from "./SwapInput";
+import SwapButton from "./SwapButton";
+import SwapToggle from "./SwapToggle";
+import TokenSelectorModal from "./TokenSelectorModal";
+import { tokensConfig } from "../libs/contracts";
+import { useUser } from "../hooks/useUser";
+import { Token } from "../interfaces";
+import { useSwapRouter } from "../hooks/useSwapRouter";
+import { useMessage } from "../contexts/MessageContext";
 
 const TokenSwap = () => {
-  const [fromValue, setFromValue] = useState<string>('0');
-  const [toValue, setToValue] = useState<string>('0');
   const [fromToken, setFromToken] = useState<Token>({
     ...tokensConfig.ETH,
-    balance: 23.491,
-    price: 3092.77,
+    balance: 0,
   });
   const [toToken, setToToken] = useState<Token>({
-    symbol: '',
-    name: '选择代币',
-    address: '',
-    decimals: 18,
+    ...tokensConfig.WYTokenA,
     balance: 0,
-    price: 0,
+  });
+  const [fromAmount, setFromAmount] = useState<{
+    amount: string;
+    token: Token;
+  }>({
+    amount: "0",
+    token: fromToken,
+  });
+  const [toAmount, setToAmount] = useState<{ amount: string; token: Token }>({
+    amount: "0",
+    token: toToken,
   });
   const [tokenSelectorOpen, setTokenSelectorOpen] = useState(false);
-  const [selectingToken, setSelectingToken] = useState<'from' | 'to'>('from');
-  const { address, isConnected } = useUser();
+  const [selectingToken, setSelectingToken] = useState<"from" | "to">("from");
+  const { isConnected, getTokenBalance } = useUser();
+  const { quoteAmountOut, quoteAmountIn } = useSwapRouter();
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const message = useMessage();
+
+  // 当fromToken或toToken变化时，更新对应的value
+  useEffect(() => {
+    setFromAmount((prev) => ({ ...prev, token: fromToken }));
+  }, [fromToken]);
+
+  useEffect(() => {
+    setToAmount((prev) => ({ ...prev, token: toToken }));
+  }, [toToken]);
 
   const handleSwapTokens = () => {
     const tempToken = fromToken;
     setFromToken(toToken);
     setToToken(tempToken);
-    
-    const tempValue = fromValue;
-    setFromValue(toValue);
-    setToValue(tempValue);
+
+    const tempValue = fromAmount;
+    setFromAmount(toAmount);
+    setToAmount(tempValue);
   };
 
   const handleSwap = () => {
-    console.log('Swapping', fromValue, fromToken.symbol, 'for', toValue, toToken.symbol);
+    console.log(
+      "Swapping",
+      fromAmount.amount,
+      fromAmount.token.symbol,
+      "for",
+      toAmount.amount,
+      toAmount.token.symbol
+    );
     // 这里将来可以添加实际的交换逻辑
   };
 
   const handleMaxClick = () => {
     if (fromToken.balance) {
-      setFromValue(fromToken.balance.toString());
+      setFromAmount((prev) => ({
+        ...prev,
+        amount: fromToken.balance!.toString(),
+      }));
     }
   };
 
   const handleSelectFromToken = () => {
-    setSelectingToken('from');
+    setSelectingToken("from");
     setTokenSelectorOpen(true);
   };
 
   const handleSelectToToken = () => {
-    setSelectingToken('to');
+    setSelectingToken("to");
     setTokenSelectorOpen(true);
   };
 
-  const handleTokenSelect = (token: Token) => {
-    if (selectingToken === 'from') {
+  const handleTokenSelect = async (token: Token) => {
+    const balance = await getTokenBalance(token);
+    token.balance = Number(balance);
+
+    if (selectingToken === "from") {
       setFromToken(token);
     } else {
       setToToken(token);
     }
   };
 
+  // 处理fromAmount的amount变化
+  const handlefromAmountChange = async (amount: string) => {
+    setFromAmount((prev) => ({ ...prev, amount }));
+
+    if (!amount || parseFloat(amount) === 0) {
+      return;
+    }
+
+    // 清除之前的定时器
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // 防抖
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const amountOut = await quoteAmountOut(fromToken.address, toToken.address, amount);
+        if (amountOut) {
+          setToAmount((prev) => ({ ...prev, amount: amountOut.toString() }));
+        }
+      } catch (error) {
+        message.error(`获取报价失败: ${error}`);
+      }
+    }, 500);
+  };
+
+  // 处理toAmount的amount变化
+  const handletoAmountChange = (amount: string) => {
+    setToAmount((prev) => ({ ...prev, amount }));
+
+    if (!amount || parseFloat(amount) === 0) {
+      return;
+    }
+
+    // 清除之前的定时器
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // 防抖
+    debounceTimer.current = setTimeout(async () => {
+      try {
+        const amountIn = await quoteAmountIn(fromToken.address, toToken.address, amount);
+        if (amountIn) {
+          setFromAmount((prev) => ({ ...prev, amount: amountIn.toString() }));
+        }
+      } catch (error) {
+        message.error(`获取报价失败: ${error}`);
+      }
+    }, 500);
+  };
+
   // 动态计算按钮文本和状态
   const { buttonText, isDisabled, errorMessage } = useMemo(() => {
-    if(!isConnected) {
+    if (!isConnected) {
       return {
-        buttonText: '点右上角连接钱包',
+        buttonText: "点右上角连接钱包",
         isDisabled: true,
-        errorMessage: null
+        errorMessage: null,
       };
     }
 
-    const fromAmount = parseFloat(fromValue) || 0;
-    
+    const fromAmountValue = parseFloat(fromAmount.amount) || 0;
+
     // 如果购买代币未选择
     if (!toToken.symbol) {
       return {
-        buttonText: '选择代币',
+        buttonText: "选择代币",
         isDisabled: true,
-        errorMessage: null
+        errorMessage: null,
       };
     }
-    
+
     // 如果输入金额为0或无效
-    if (fromAmount === 0) {
+    if (fromAmountValue === 0) {
       return {
-        buttonText: '输入金额',
+        buttonText: "输入金额",
         isDisabled: true,
-        errorMessage: null
+        errorMessage: null,
       };
     }
-    
+
     // 如果余额不足
-    if (fromToken.balance !== undefined && fromAmount > fromToken.balance) {
+    if (
+      fromToken.balance !== undefined &&
+      fromAmountValue > fromToken.balance
+    ) {
       return {
         buttonText: `${fromToken.symbol} 不足`,
         isDisabled: true,
-        errorMessage: `${fromToken.symbol} 不足, 无法兑换`
+        errorMessage: `${fromToken.symbol} 不足, 无法兑换`,
       };
     }
-    
+
     // 如果金额足够
     return {
-      buttonText: '立即交换',
+      buttonText: "立即交换",
       isDisabled: false,
-      errorMessage: null
+      errorMessage: null,
     };
-  }, [isConnected, fromValue, fromToken.balance, fromToken.symbol, toToken.symbol]);
+  }, [
+    isConnected,
+    fromAmount.amount,
+    fromToken.balance,
+    fromToken.symbol,
+    toToken.symbol,
+  ]);
+
+  // 获取代币余额
+  async function getBalance() {
+    const balance1 = await getTokenBalance(fromToken);
+    const balance2 = await getTokenBalance(toToken);
+    setFromToken((prev) => ({ ...prev, balance: Number(balance1) }));
+    setToToken((prev) => ({ ...prev, balance: Number(balance2) }));
+  }
+
+  useEffect(() => {
+    if (isConnected) {
+      getBalance();
+    }
+  }, [isConnected]);
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
 
   return (
     <Paper
@@ -127,81 +236,97 @@ const TokenSwap = () => {
       sx={{
         p: 4,
         borderRadius: 4,
-        backgroundColor: 'background.paper',
-        border: '1px solid',
-        borderColor: 'divider',
+        backgroundColor: "background.paper",
+        border: "1px solid",
+        borderColor: "divider",
         maxWidth: 480,
-        width: '100%',
+        width: "100%",
       }}
     >
       <Typography variant="h5" component="h1" sx={{ mb: 3, fontWeight: 600 }}>
         交换
       </Typography>
-      
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {/* 出售部分 */}
         <Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 500 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mb: 1, fontWeight: 500 }}
+          >
             出售
           </Typography>
           <SwapInput
-            value={fromValue}
-            onChange={setFromValue}
+            value={fromAmount.amount}
+            onChange={handlefromAmountChange}
             token={fromToken}
             onSelectToken={handleSelectFromToken}
             showMax={true}
             onMaxClick={handleMaxClick}
-            showUsdValue={true}
-            usdValue={fromToken.price ? (parseFloat(fromValue) * fromToken.price).toFixed(2) : '0'}
+            showUsdValue={false}
+            usdValue={
+              fromToken.price
+                ? (parseFloat(fromAmount.amount) * fromToken.price).toFixed(2)
+                : "0"
+            }
           />
         </Box>
-        
+
         <SwapToggle onClick={handleSwapTokens} />
-        
+
         {/* 购买部分 */}
         <Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontWeight: 500 }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mb: 1, fontWeight: 500 }}
+          >
             购买
           </Typography>
           <SwapInput
-            value={toValue}
-            onChange={setToValue}
+            value={toAmount.amount}
+            onChange={handletoAmountChange}
             token={toToken}
             onSelectToken={handleSelectToToken}
-            showUsdValue={true}
-            usdValue={toToken.price ? (parseFloat(toValue) * toToken.price).toFixed(2) : '0'}
+            showUsdValue={false}
+            usdValue={
+              toToken.price
+                ? (parseFloat(toAmount.amount) * toToken.price).toFixed(2)
+                : "0"
+            }
           />
         </Box>
-        
+
         <Box sx={{ mt: 2 }}>
-          <SwapButton 
-            onClick={handleSwap} 
+          <SwapButton
+            onClick={handleSwap}
             disabled={isDisabled}
             text={buttonText}
           />
-          
+
           {/* 错误信息 */}
           {errorMessage && (
-            <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Warning sx={{ color: 'warning.main', fontSize: 20 }} />
+            <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 1 }}>
+              <Warning sx={{ color: "warning.main", fontSize: 20 }} />
               <Typography variant="body2" color="text.secondary">
                 {errorMessage}
               </Typography>
             </Box>
           )}
-          
+
           {/* Gas费用说明 */}
           <Box sx={{ mt: 2 }}>
-            <Alert 
-              severity="info" 
+            <Alert
+              severity="info"
               icon={<Info />}
-              sx={{ 
-                backgroundColor: 'action.hover',
-                border: '1px solid',
-                borderColor: 'divider',
-                '& .MuiAlert-message': {
-                  width: '100%'
-                }
+              sx={{
+                backgroundColor: "action.hover",
+                border: "1px solid",
+                borderColor: "divider",
+                "& .MuiAlert-message": {
+                  width: "100%",
+                },
               }}
             >
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -210,12 +335,12 @@ const TokenSwap = () => {
               <Link
                 href="#"
                 variant="body2"
-                sx={{ 
-                  color: 'primary.main', 
-                  textDecoration: 'underline',
-                  '&:hover': {
-                    textDecoration: 'none'
-                  }
+                sx={{
+                  color: "primary.main",
+                  textDecoration: "underline",
+                  "&:hover": {
+                    textDecoration: "none",
+                  },
                 }}
               >
                 了解详情
@@ -229,7 +354,7 @@ const TokenSwap = () => {
         open={tokenSelectorOpen}
         onClose={() => setTokenSelectorOpen(false)}
         onSelectToken={handleTokenSelect}
-        currentToken={selectingToken === 'from' ? fromToken : toToken}
+        currentToken={selectingToken === "from" ? fromToken : toToken}
         title="选择代币"
       />
     </Paper>
@@ -237,4 +362,3 @@ const TokenSwap = () => {
 };
 
 export default TokenSwap;
-
