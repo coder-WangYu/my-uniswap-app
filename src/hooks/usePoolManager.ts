@@ -4,7 +4,7 @@ import { useUser } from "./useUser";
 import { useLoading } from "../contexts/LoadingContext";
 import { useWalletClient } from "wagmi";
 import { getContract } from "viem";
-import { contractsConfig } from "../libs/contracts";
+import { contractsConfig } from "../lib/contracts";
 
 // Uniswap V3 价格计算相关常量
 const Q96 = BigInt(2) ** BigInt(96);

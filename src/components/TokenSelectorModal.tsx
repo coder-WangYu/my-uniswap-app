@@ -19,7 +19,7 @@ import {
   Button,
 } from "@mui/material";
 import { Close, Search, TrendingUp } from "@mui/icons-material";
-import { tokensConfig } from "../libs/contracts";
+import { tokensConfig } from "../lib/contracts";
 import { Token } from "../interfaces";
 
 interface TokenSelectorModalProps {

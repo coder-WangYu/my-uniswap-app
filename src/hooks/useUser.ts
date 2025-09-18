@@ -1,7 +1,7 @@
 import { useAccount } from "wagmi";
 import { formatEther, http, createPublicClient } from "viem";
 import { sepolia } from "viem/chains";
-import { contractsConfig } from "../libs/contracts";
+import { contractsConfig } from "../lib/contracts";
 import { Token } from "../interfaces";
 import "dotenv/config";
 

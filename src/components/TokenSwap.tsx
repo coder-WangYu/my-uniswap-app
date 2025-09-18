@@ -5,7 +5,7 @@ import SwapInput from "./SwapInput";
 import SwapButton from "./SwapButton";
 import SwapToggle from "./SwapToggle";
 import TokenSelectorModal from "./TokenSelectorModal";
-import { tokensConfig } from "../libs/contracts";
+import { tokensConfig } from "../lib/contracts";
 import { useUser } from "../hooks/useUser";
 import { Token } from "../interfaces";
 import { useSwapRouter } from "../hooks/useSwapRouter";

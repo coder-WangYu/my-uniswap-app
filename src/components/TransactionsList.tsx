@@ -51,56 +51,6 @@ const mockTransactionData: TransactionData[] = [
     gasUsed: 180000,
     gasPrice: 20,
   },
-  {
-    id: '2',
-    type: 'add',
-    token1: { name: 'Ethereum', symbol: 'ETH', amount: 2.0 },
-    token2: { name: 'Tether USD', symbol: 'USDT', amount: 6000 },
-    txHash: '0x2345...6789',
-    timestamp: Date.now() - 900000, // 15分钟前
-    gasUsed: 220000,
-    gasPrice: 18,
-  },
-  {
-    id: '3',
-    type: 'swap',
-    token1: { name: 'USD Coin', symbol: 'USDC', amount: 10000 },
-    token2: { name: 'Tether USD', symbol: 'USDT', amount: 10000 },
-    txHash: '0x3456...7890',
-    timestamp: Date.now() - 1800000, // 30分钟前
-    gasUsed: 150000,
-    gasPrice: 22,
-  },
-  {
-    id: '4',
-    type: 'remove',
-    token1: { name: 'Binance Coin', symbol: 'BNB', amount: 5.0 },
-    token2: { name: 'USD Coin', symbol: 'USDC', amount: 4500 },
-    txHash: '0x4567...8901',
-    timestamp: Date.now() - 3600000, // 1小时前
-    gasUsed: 200000,
-    gasPrice: 19,
-  },
-  {
-    id: '5',
-    type: 'swap',
-    token1: { name: 'Wrapped Bitcoin', symbol: 'WBTC', amount: 0.1 },
-    token2: { name: 'Ethereum', symbol: 'ETH', amount: 3.2 },
-    txHash: '0x5678...9012',
-    timestamp: Date.now() - 7200000, // 2小时前
-    gasUsed: 190000,
-    gasPrice: 21,
-  },
-  {
-    id: '6',
-    type: 'add',
-    token1: { name: 'Base ETH', symbol: 'ETH', amount: 1.8 },
-    token2: { name: 'USD Coin', symbol: 'USDC', amount: 8100 },
-    txHash: '0x6789...0123',
-    timestamp: Date.now() - 10800000, // 3小时前
-    gasUsed: 210000,
-    gasPrice: 17,
-  },
 ];
 
 const TransactionsList = () => {

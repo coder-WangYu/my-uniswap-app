@@ -19,7 +19,7 @@ import TokenSelectorModal from "./TokenSelectorModal";
 import { useUser } from "../hooks/useUser";
 import { Token, Pool, PositionParams } from "../interfaces";
 import { message } from "antd";
-import { tokensConfig } from "../libs/contracts";
+import { tokensConfig } from "../lib/contracts";
 import { usePoolManager } from "../hooks/usePoolManager";
 import { usePositionManager } from "../hooks/usePositionManager";
 import { parseEther } from "viem";

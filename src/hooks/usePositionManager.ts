@@ -2,7 +2,7 @@ import { getContract } from "viem";
 import { useWalletClient } from "wagmi";
 import { useLoading } from "../contexts/LoadingContext";
 import { useUser } from "./useUser";
-import { contractsConfig } from "../libs/contracts";
+import { contractsConfig } from "../lib/contracts";
 import { PositionParams } from "../interfaces";
 
 export const usePositionManager = () => {

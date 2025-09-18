@@ -1,6 +1,6 @@
 import { useWalletClient } from "wagmi";
 import { formatEther, getContract, parseEther } from "viem";
-import { contractsConfig } from "../libs/contracts";
+import { contractsConfig } from "../lib/contracts";
 import { Pool } from "../interfaces";
 import { useLoading } from "../contexts/LoadingContext";
 import { usePoolManager } from "./usePoolManager";
