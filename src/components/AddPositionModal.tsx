@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,7 +9,6 @@ import {
   Typography,
   IconButton,
   Avatar,
-  Divider,
   FormControl,
   Select,
   MenuItem,
@@ -22,7 +21,6 @@ import { Token, Pool, PositionParams } from "../interfaces";
 import { message } from "antd";
 import { tokensConfig } from "../libs/contracts";
 import { usePoolManager } from "../hooks/usePoolManager";
-import { useSwapRouter } from "../hooks/useSwapRouter";
 import { usePositionManager } from "../hooks/usePositionManager";
 import { parseEther } from "viem";
 
@@ -39,7 +37,9 @@ interface AddPositionModalProps {
 }
 
 const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
-  const [selectedFromToken, setSelectedFromToken] = useState<Token>(tokensConfig.ETH);
+  const [selectedFromToken, setSelectedFromToken] = useState<Token>(
+    tokensConfig.ETH
+  );
   const [selectedToToken, setSelectedToToken] = useState<Token>(
     tokensConfig.WYTokenA
   );
@@ -48,7 +48,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
     amount: string;
     token: Token;
   }>({ amount: "0", token: selectedFromToken });
-  
+
   const [toAmount, setToAmount] = useState<{
     amount: string;
     token: Token;
@@ -59,23 +59,11 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
     "token1"
   );
   const [currentPage, setCurrentPage] = useState<"pair" | "deposit">("pair");
-  const [tickLower, setTickLower] = useState<string>("0");
-  const [tickUpper, setTickUpper] = useState<string>("0");
+  const [minPrice, setMinPrice] = useState<string>("0");
+  const [maxPrice, setMaxPrice] = useState<string>("0");
   const [token1Balance, setToken1Balance] = useState<number>(0);
   const [token2Balance, setToken2Balance] = useState<number>(0);
-  const [currentPool, setCurrentPool] = useState<Pool | null>({
-    fee: 500,
-    feeProtocol: 0,
-    index: 0,
-    liquidity: 0n,
-    pool: "0xC5bcd30119633a8e965Be65635B1cFFd62f75bF3",
-    sqrtPriceX96: 79228162514264337593543950336n,
-    tick: 0,
-    tickLower: -60,
-    tickUpper: 60,
-    token0: "0xc5C45CAe44dA4eD5F767d38ADBa00C7B56125fDa",
-    token1: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  });
+  const [currentPool, setCurrentPool] = useState<Pool | null>();
   const { getTokenBalance, address } = useUser();
   const { createPool, getPool } = usePoolManager();
   const { addLiquidity } = usePositionManager();
@@ -107,8 +95,8 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
     setFromAmount({ amount: "0", token: selectedFromToken });
     setToAmount({ amount: "0", token: selectedToToken });
     setSelectedFeeTier("0.05%");
-    setTickLower("0");
-    setTickUpper("0");
+    setMinPrice("0");
+    setMaxPrice("0");
   };
 
   // 处理关闭窗口
@@ -153,8 +141,8 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
     setCurrentPage("deposit");
   };
 
-  const handleCreate = () => {
-    userAddLiquidity();
+  const handleCreate = async () => {
+    await userAddLiquidity();
 
     handleClose();
   };
@@ -202,8 +190,8 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
       amount0Desired: parseEther(fromAmount.amount),
       amount1Desired: parseEther(toAmount.amount),
       recipient: address as `0x${string}`,
-      deadline: BigInt(Date.now() + 3000)
-    }
+      deadline: BigInt(Date.now() + 3000),
+    };
 
     const res = await addLiquidity(params);
 
@@ -420,8 +408,8 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
                     }}
                   >
                     <TextField
-                      value={tickLower}
-                      onChange={(e) => setTickLower(e.target.value)}
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
                       variant="standard"
                       InputProps={{
                         disableUnderline: true,
@@ -469,8 +457,8 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
                     }}
                   >
                     <TextField
-                      value={tickUpper}
-                      onChange={(e) => setTickUpper(e.target.value)}
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
                       variant="standard"
                       InputProps={{
                         disableUnderline: true,
@@ -523,7 +511,9 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
                 <Box sx={{ flex: 1, mr: 2 }}>
                   <TextField
                     value={fromAmount.amount}
-                    onChange={(e) => setFromAmount({ ...fromAmount, amount: e.target.value })}
+                    onChange={(e) =>
+                      setFromAmount({ ...fromAmount, amount: e.target.value })
+                    }
                     variant="standard"
                     InputProps={{
                       disableUnderline: true,
@@ -540,7 +530,10 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary">
-                    {calculateUSDValue(fromAmount.amount, fromAmount.token.price || 0)}
+                    {calculateUSDValue(
+                      fromAmount.amount,
+                      fromAmount.token.price || 0
+                    )}
                   </Typography>
                 </Box>
 
@@ -580,7 +573,9 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
                 <Box sx={{ flex: 1, mr: 2 }}>
                   <TextField
                     value={toAmount.amount}
-                    onChange={(e) => setToAmount({ ...toAmount, amount: e.target.value })}
+                    onChange={(e) =>
+                      setToAmount({ ...toAmount, amount: e.target.value })
+                    }
                     variant="standard"
                     InputProps={{
                       disableUnderline: true,
@@ -597,7 +592,10 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary">
-                    {calculateUSDValue(toAmount.amount, toAmount.token.price || 0)}
+                    {calculateUSDValue(
+                      toAmount.amount,
+                      toAmount.token.price || 0
+                    )}
                   </Typography>
                 </Box>
 

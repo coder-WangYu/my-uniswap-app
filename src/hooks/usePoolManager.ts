@@ -67,6 +67,7 @@ export const usePoolManager = () => {
         BigInt(10) ** BigInt(tokenA.decimals), // reserve1
         BigInt(10) ** BigInt(tokenB.decimals) // reserve0
       );
+      console.log(sqrtPriceX96)
 
       // 获取 tick 范围
       const { tickLower, tickUpper } = getTickRange(fee);
@@ -145,5 +146,6 @@ export const usePoolManager = () => {
     createPool,
     getPools,
     getPool,
+    poolManager,
   };
 };

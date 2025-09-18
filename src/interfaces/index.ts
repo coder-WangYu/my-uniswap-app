@@ -17,8 +17,8 @@ interface Pool {
   pool: string;
   sqrtPriceX96: BigInt;
   tick: number;
-  tickLower: number;
-  tickUpper: number;
+  tickLower?: number;
+  tickUpper?: number;
   token0: string;
   token1: string;
 }

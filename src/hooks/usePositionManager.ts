@@ -2,11 +2,11 @@ import { getContract } from "viem";
 import { useWalletClient } from "wagmi";
 import { useLoading } from "../contexts/LoadingContext";
 import { useUser } from "./useUser";
-import { contractsConfig, tokensConfig } from "../libs/contracts";
+import { contractsConfig } from "../libs/contracts";
 import { PositionParams } from "../interfaces";
 
 export const usePositionManager = () => {
-  const { client, address } = useUser();
+  const { client } = useUser();
   const { setLoading } = useLoading();
   const { data: walletClient } = useWalletClient();
 
@@ -21,13 +21,10 @@ export const usePositionManager = () => {
     client: walletClient,
   });
 
-  const addLiquidity = async (args: PositionParams) => {
-    console.log(args);
-    setLoading(true, "开始创建头寸...");
-
+  const addLiquidity = async (positionParams: PositionParams) => {
     try {
       setLoading(true, "正在创建头寸...");
-      const hash = await positionManager.write.mint([args]);
+      const hash = await positionManager.write.mint([positionParams]);
 
       setLoading(true, "等待交易确认...");
       const tx = await client.waitForTransactionReceipt({ hash });

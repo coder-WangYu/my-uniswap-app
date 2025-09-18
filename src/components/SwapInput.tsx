@@ -23,6 +23,7 @@ interface SwapInputProps {
   showMax?: boolean;
   onMaxClick?: () => void;
   placeholder?: string;
+  readOnly?: boolean;
 }
 
 const SwapInput = ({
@@ -35,6 +36,7 @@ const SwapInput = ({
   showMax = false,
   onMaxClick,
   placeholder = "0.00",
+  readOnly = false,
 }: SwapInputProps) => {
   return (
     <Box
@@ -50,21 +52,31 @@ const SwapInput = ({
         <Box sx={{ flex: 1 }}>
           <TextField
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={readOnly ? undefined : (e) => onChange(e.target.value)}
             placeholder={placeholder}
             variant="standard"
+            readOnly={readOnly}
+            disabled={readOnly}
             InputProps={{
               disableUnderline: true,
               sx: {
                 fontSize: '2rem',
                 fontWeight: 600,
-                color: 'text.primary',
+                color: readOnly ? 'text.secondary' : 'text.primary',
+                cursor: readOnly ? 'not-allowed' : 'text',
+                '&.Mui-disabled': {
+                  color: 'text.secondary',
+                  WebkitTextFillColor: 'text.secondary',
+                },
               },
             }}
             sx={{
               width: '100%',
               '& .MuiInputBase-input': {
                 padding: 0,
+              },
+              '& .MuiInputBase-root.Mui-disabled': {
+                color: 'text.secondary',
               },
             }}
           />
