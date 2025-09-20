@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Paper,
   Table,
@@ -19,44 +19,40 @@ import {
   Chip,
 } from '@mui/material';
 import { Search, ArrowUpward, ArrowDownward } from '@mui/icons-material';
+import { GET_POOLS } from '../api';
+import { useQuery } from '@apollo/client/react';
+import { useLoading } from '../contexts/LoadingContext';
 
 interface PoolData {
   id: string;
-  token1: {
-    name: string;
+  token0: {
+    id: string;
     symbol: string;
-    address: string;
   };
-  token2: {
-    name: string;
+  token1: {
+    id: string;
     symbol: string;
-    address: string;
   };
   fee: string;
-  tvl: number;
-  volume24h: number;
-  volume7d: number;
-  apr: number;
+  tvl?: number;
+  volume24h?: number;
+  volume7d?: number;
+  apr?: number;
 }
 
-const mockPoolData: PoolData[] = [
-  {
-    id: '1',
-    token1: { name: 'Ethereum', symbol: 'ETH', address: '0x...' },
-    token2: { name: 'USD Coin', symbol: 'USDC', address: '0x...' },
-    fee: '0.05%',
-    tvl: 12500000,
-    volume24h: 2500000,
-    volume7d: 18000000,
-    apr: 12.5,
-  }
-];
+const feeTier: Record<string, string> = {
+  "500": "0.05%",
+  "3000": "0.3%", 
+  "10000": "1%"
+}
 
 const PoolsList = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('tvl');
+  const [poolData, setPoolData] = useState<PoolData[]>([]);
+  const { data, loading, error } = useQuery(GET_POOLS);
+  const { setLoading } = useLoading()
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -84,27 +80,22 @@ const PoolsList = () => {
     return colors[colorIndex];
   };
 
-  const filteredData = mockPoolData.filter(pool =>
-    pool.token1.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    pool.token1.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    pool.token2.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    pool.token2.symbol.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const sortedData = [...filteredData].sort((a, b) => {
-    switch (sortBy) {
-      case 'tvl':
-        return b.tvl - a.tvl;
-      case 'volume24h':
-        return b.volume24h - a.volume24h;
-      case 'volume7d':
-        return b.volume7d - a.volume7d;
-      case 'apr':
-        return b.apr - a.apr;
-      default:
-        return a.id.localeCompare(b.id);
+  useEffect(() => {
+    setLoading(true, "正在获取流动性池列表...")
+    if(loading) console.log(loading)
+    if(error) console.log(error)
+    
+    if(data) {
+      // @ts-ignore
+      setPoolData(data.pools_collection)
     }
-  });
+
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 200)
+
+    return () => clearInterval(timer)
+  }, [data, loading, error])
 
   return (
     <Paper
@@ -138,24 +129,6 @@ const PoolsList = () => {
               />
             </Box>
           </Box>
-          
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <Select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              sx={{ 
-                backgroundColor: 'background.paper',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'divider',
-                },
-              }}
-            >
-              <MenuItem value="tvl">总锁定价值</MenuItem>
-              <MenuItem value="volume24h">24h 交易量</MenuItem>
-              <MenuItem value="volume7d">7d 交易量</MenuItem>
-              <MenuItem value="apr">APR</MenuItem>
-            </Select>
-          </FormControl>
         </Box>
       </Box>
 
@@ -171,10 +144,9 @@ const PoolsList = () => {
               <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>APR</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
-            {sortedData
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((pool) => (
+            {poolData.length && poolData.map((pool) => (
                 <TableRow
                   key={pool.id}
                   hover
@@ -192,39 +164,42 @@ const PoolsList = () => {
                           sx={{
                             width: 32,
                             height: 32,
-                            backgroundColor: getTokenLogo(pool.token1.symbol),
+                            backgroundColor: getTokenLogo(pool.token0.symbol),
                             fontSize: '0.875rem',
                             fontWeight: 600,
                           }}
                         >
-                          {pool.token1.symbol.charAt(0)}
+                          {pool.token0.symbol.charAt(0)}
                         </Avatar>
                         <Avatar
                           sx={{
                             width: 32,
                             height: 32,
-                            backgroundColor: getTokenLogo(pool.token2.symbol),
+                            backgroundColor: getTokenLogo(pool.token1.symbol),
                             fontSize: '0.875rem',
                             fontWeight: 600,
                             ml: -1,
                           }}
                         >
-                          {pool.token2.symbol.charAt(0)}
+                          {pool.token1.symbol.charAt(0)}
                         </Avatar>
                       </Box>
                       <Box>
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          {pool.token1.symbol} / {pool.token2.symbol}
+                          {pool.token0.symbol} / {pool.token1.symbol}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {pool.token1.name} / {pool.token2.name}
+                          {`${pool.token0.id.slice(0, 5)}...${pool.token0.id.slice(27, 32)}`} 
+                          <span style={{padding: "0 5px" }}>/</span>
+                          {`${pool.token1.id.slice(0, 5)}...${pool.token1.id.slice(27, 32)}`}
                         </Typography>
                       </Box>
                     </Box>
                   </TableCell>
+
                   <TableCell>
                     <Chip
-                      label={pool.fee}
+                      label={feeTier[pool.fee] || `${pool.fee}%`}
                       size="small"
                       sx={{
                         backgroundColor: 'primary.main',
@@ -233,23 +208,27 @@ const PoolsList = () => {
                       }}
                     />
                   </TableCell>
+
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      ${formatNumber(pool.tvl)}
+                      {/* ${formatNumber(pool.tvl)} */}
                     </Typography>
                   </TableCell>
+
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      ${formatNumber(pool.volume24h)}
+                      {/* ${formatNumber(pool.volume24h)} */}
                     </Typography>
                   </TableCell>
+
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      ${formatNumber(pool.volume7d)}
+                      {/* ${formatNumber(pool.volume7d)} */}
                     </Typography>
                   </TableCell>
+
                   <TableCell>
-                    <Typography 
+                    {/* <Typography 
                       variant="body2" 
                       sx={{ 
                         fontWeight: 500,
@@ -257,7 +236,7 @@ const PoolsList = () => {
                       }}
                     >
                       {pool.apr.toFixed(2)}%
-                    </Typography>
+                    </Typography> */}
                   </TableCell>
                 </TableRow>
               ))}
@@ -268,7 +247,7 @@ const PoolsList = () => {
       <TablePagination
         rowsPerPageOptions={[10, 25, 50]}
         component="div"
-        count={sortedData.length}
+        count={poolData.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

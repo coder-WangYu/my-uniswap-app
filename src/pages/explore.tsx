@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import Head from 'next/head';
 import { CssBaseline, Box, Tabs, Tab } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CustomThemeProvider } from '../contexts/ThemeContext';
 import AppHeader from '../components/AppHeader';
 import TokensList from '../components/TokensList';

@@ -17,50 +17,30 @@ import {
   FormControl,
 } from "@mui/material";
 import { Search, ArrowUpward, ArrowDownward } from "@mui/icons-material";
-import { message } from "antd";
-import { useQuery } from "@apollo/client/react";
 import { GET_TOKENS } from "../api";
+import { useQuery } from "@apollo/client/react";
+import { ignore } from "antd/es/theme/useToken";
+import { useLoading } from "../contexts/LoadingContext";
 
 interface TokenData {
   id: string;
-  rank: number;
+  rank?: number;
   name: string;
   symbol: string;
-  price: number;
-  change1h: number;
-  change1d: number;
-  fdv: number;
-  volume24h: number;
-  logo?: string;
+  price?: number;
+  change1h?: number;
+  change1d?: number;
+  fdv?: number;
+  volume24h?: number;
 }
-
-const mockTokenData: TokenData[] = [
-  {
-    id: "1",
-    rank: 1,
-    name: "Ethereum",
-    symbol: "ETH",
-    price: 4511.68,
-    change1h: -0.15,
-    change1d: 3.21,
-    fdv: 10800000000,
-    volume24h: 990900000,
-  },
-];
 
 const TokensList = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("volume");
-  // 代币列表
-  const {
-    data: tokensData,
-    loading: tokensLoading,
-    error: tokensError,
-  } = useQuery(GET_TOKENS, {
-    variables: { first: 10, skip: 0 },
-  });
+  const [tokenData, setTokenData] = useState<TokenData[]>([]);
+  const { data, loading, error } = useQuery(GET_TOKENS);
+  const { setLoading } = useLoading()
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -109,30 +89,22 @@ const TokensList = () => {
     return colors[colorIndex];
   };
 
-  const filteredData = mockTokenData.filter(
-    (token) =>
-      token.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      token.symbol.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const sortedData = [...filteredData].sort((a, b) => {
-    switch (sortBy) {
-      case "volume":
-        return b.volume24h - a.volume24h;
-      case "price":
-        return b.price - a.price;
-      case "change1d":
-        return b.change1d - a.change1d;
-      default:
-        return a.rank - b.rank;
-    }
-  });
-
   useEffect(() => {
-    if (tokensLoading) return message.loading("tokens getting")
-    if (tokensError) return message.error("tokens not found");
-    console.log(tokensData);
-  }, [tokensData, tokensError]);
+    setLoading(true, "正在获取代币列表...")
+    if (loading) console.log(loading);
+    if (error) console.log(error);
+  
+    if(data) {
+      // @ts-ignore
+      setTokenData(data.tokens_collection)
+    }
+
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 200)
+
+    return () => clearInterval(timer)
+  }, [data, loading, error]);
 
   return (
     <Paper
@@ -166,24 +138,6 @@ const TokensList = () => {
               />
             </Box>
           </Box>
-
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <Select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              sx={{
-                backgroundColor: "background.paper",
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "divider",
-                },
-              }}
-            >
-              <MenuItem value="rank">排名</MenuItem>
-              <MenuItem value="volume">24h 交易量</MenuItem>
-              <MenuItem value="price">价格</MenuItem>
-              <MenuItem value="change1d">24h 涨跌</MenuItem>
-            </Select>
-          </FormControl>
         </Box>
       </Box>
 
@@ -192,10 +146,10 @@ const TokensList = () => {
           <TableHead>
             <TableRow>
               <TableCell sx={{ fontWeight: 600, color: "text.primary" }}>
-                #
+                代币名称
               </TableCell>
               <TableCell sx={{ fontWeight: 600, color: "text.primary" }}>
-                代币名称
+                代币地址
               </TableCell>
               <TableCell sx={{ fontWeight: 600, color: "text.primary" }}>
                 价格
@@ -225,10 +179,10 @@ const TokensList = () => {
               </TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
-            {sortedData
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((token) => (
+            {tokenData.length > 0 &&
+              tokenData.map((token) => (
                 <TableRow
                   key={token.id}
                   hover
@@ -239,11 +193,6 @@ const TokensList = () => {
                     cursor: "pointer",
                   }}
                 >
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {token.rank}
-                    </Typography>
-                  </TableCell>
                   <TableCell>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                       <Avatar
@@ -267,13 +216,21 @@ const TokensList = () => {
                       </Box>
                     </Box>
                   </TableCell>
+
                   <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      ${formatPrice(token.price)}
+                    <Typography variant="body2" color="text.secondary">
+                      {`${token.id.slice(0, 5)}...${token.id.slice(27, 32)}`}
                     </Typography>
                   </TableCell>
+
                   <TableCell>
-                    <Box
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {/* ${formatPrice(token.price)} */}
+                    </Typography>
+                  </TableCell>
+
+                  <TableCell>
+                    {/* <Box
                       sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                     >
                       {token.change1h >= 0 ? (
@@ -293,12 +250,13 @@ const TokensList = () => {
                           fontWeight: 500,
                         }}
                       >
-                        {Math.abs(token.change1h).toFixed(2)}%
+                        {Math.abs(token.change1h)}%
                       </Typography>
-                    </Box>
+                    </Box> */}
                   </TableCell>
+
                   <TableCell>
-                    <Box
+                    {/* <Box
                       sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
                     >
                       {token.change1d >= 0 ? (
@@ -320,21 +278,23 @@ const TokensList = () => {
                       >
                         {Math.abs(token.change1d).toFixed(2)}%
                       </Typography>
-                    </Box>
+                    </Box> */}
                   </TableCell>
+
                   <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {/* <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       ${formatNumber(token.fdv)}
-                    </Typography>
+                    </Typography> */}
                   </TableCell>
+
                   <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {/* <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       ${formatNumber(token.volume24h)}
-                    </Typography>
+                    </Typography> */}
                   </TableCell>
+                  
                   <TableCell>
-                    <Box sx={{ width: 80, height: 32 }}>
-                      {/* 简单的价格图表模拟 */}
+                    {/* <Box sx={{ width: 80, height: 32 }}>
                       <svg width="80" height="32" viewBox="0 0 80 32">
                         <polyline
                           fill="none"
@@ -343,7 +303,7 @@ const TokensList = () => {
                           points="0,24 20,20 40,16 60,12 80,8"
                         />
                       </svg>
-                    </Box>
+                    </Box> */}
                   </TableCell>
                 </TableRow>
               ))}
@@ -354,7 +314,7 @@ const TokensList = () => {
       <TablePagination
         rowsPerPageOptions={[10, 25, 50]}
         component="div"
-        count={sortedData.length}
+        count={tokenData.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

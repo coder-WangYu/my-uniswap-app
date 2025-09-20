@@ -174,24 +174,6 @@ const TransactionsList = () => {
               />
             </Box>
           </Box>
-          
-          <FormControl size="small" sx={{ minWidth: 120 }}>
-            <Select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              sx={{ 
-                backgroundColor: 'background.paper',
-                '& .MuiOutlinedInput-notchedOutline': {
-                  borderColor: 'divider',
-                },
-              }}
-            >
-              <MenuItem value="all">所有类型</MenuItem>
-              <MenuItem value="swap">交换</MenuItem>
-              <MenuItem value="add">添加流动性</MenuItem>
-              <MenuItem value="remove">移除流动性</MenuItem>
-            </Select>
-          </FormControl>
         </Box>
       </Box>
 
