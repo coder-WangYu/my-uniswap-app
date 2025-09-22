@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Paper,
   Typography,
@@ -26,8 +26,12 @@ import { Add, LocalFireDepartment, AttachMoney } from '@mui/icons-material';
 import AddPositionModal from './AddPositionModal';
 import { useUser } from '../hooks/useUser';
 import { useMessage } from '../contexts/MessageContext';
+import { useLoading } from '../contexts/LoadingContext';
+import { useQuery } from '@apollo/client/react';
+import { GET_POSITIONS } from '../api';
+import { formatEther } from 'viem';
 
-interface PoolData {
+interface PositionData {
   id: string;
   tokenPair: {
     token1: string;
@@ -44,56 +48,11 @@ interface PoolData {
   liquidity: string;
 }
 
-const mockPoolData: PoolData[] = [
-  {
-    id: '1',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-    liquidity: '2024',
-  },
-  {
-    id: '2',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-    liquidity: '2024',
-  },
-  {
-    id: '3',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-    liquidity: '2024',
-  },
-];
+const feeTier: Record<string, string> = {
+  "500": "0.05%",
+  "3000": "0.3%", 
+  "10000": "1%"
+}
 
 const PoolList = () => {
   const [page, setPage] = useState(0);
@@ -101,13 +60,16 @@ const PoolList = () => {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [burnDialogOpen, setBurnDialogOpen] = useState(false);
   const [collectDialogOpen, setCollectDialogOpen] = useState(false);
-  const [selectedPool, setSelectedPool] = useState<PoolData | null>(null);
+  const [selectedPool, setSelectedPool] = useState<PositionData | null>(null);
   const [burnAmount, setBurnAmount] = useState('');
   const [collectAmount, setCollectAmount] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [actionSuccess, setActionSuccess] = useState(false);
   const { isWalletConnected, address } = useUser();
+  const [PositionData, setPositionData] = useState<PositionData[]>([]);
   const message = useMessage();
+  const { data, loading, error } = useQuery(GET_POSITIONS);
+  const { setLoading } = useLoading();
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -118,13 +80,13 @@ const PoolList = () => {
     setPage(0);
   };
 
-  const handleBurnClick = (pool: PoolData) => {
+  const handleBurnClick = (pool: PositionData) => {
     setSelectedPool(pool);
     setBurnAmount(pool.liquidity);
     setBurnDialogOpen(true);
   };
 
-  const handleCollectClick = (pool: PoolData) => {
+  const handleCollectClick = (pool: PositionData) => {
     setSelectedPool(pool);
     setCollectAmount('0.5'); // 模拟可收集的费用
     setCollectDialogOpen(true);
@@ -177,10 +139,51 @@ const PoolList = () => {
     setAddModalOpen(true)
   }
 
+  function dealPositionData(data: any) {
+    // 处理数据
+    const posData = data.map((pos: any) => {
+      return {
+        id: pos.id,
+        tokenPair: {
+          token1: pos.token0.symbol,
+          token2: pos.token1.symbol,
+          amount1: formatEther(BigInt(pos.token0.totalSupply)),
+          amount2: formatEther(BigInt(pos.token1.totalSupply))
+        },
+        // feeTier: feeTier[pos.fee],
+        feeTier: "0.05%",
+        priceRange: {
+          min: pos.tickLower,
+          max: pos.tickUpper,
+        },
+        currentPrice: "3,092.77",
+        liquidity: formatEther(BigInt(pos.liquidity)),
+      }
+    })
+    setPositionData(posData)
+  }
+
+  useEffect(() => {
+    setLoading(true, "正在获取代币列表...")
+    if (loading) console.log(loading);
+    if (error) console.log(error);
+  
+    if(data) {
+      // @ts-ignore
+      dealPositionData(data.positions_collection)
+    }
+
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 200)
+
+    return () => clearInterval(timer)
+  }, [data, loading, error, isWalletConnected]);
+
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
       <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 600 }}>
-        流动性池
+        头寸
       </Typography>
 
       <Paper
@@ -195,7 +198,7 @@ const PoolList = () => {
         <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-              流动性池列表
+              头寸列表
             </Typography>
             
             <Button
@@ -207,7 +210,7 @@ const PoolList = () => {
                 px: 3,
               }}
             >
-              添加流动性池
+              添加头寸
             </Button>
           </Box>
         </Box>
@@ -220,16 +223,14 @@ const PoolList = () => {
                 <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>费用等级</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>设置价格范围</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>当前价格</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>流动性</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>头寸价值</TableCell>
                 <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>操作</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {mockPoolData
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((pool) => (
+              {PositionData.length > 0 && PositionData.map((pos) => (
                   <TableRow
-                    key={pool.id}
+                    key={pos.id}
                     hover
                     sx={{
                       '&:hover': {
@@ -265,14 +266,15 @@ const PoolList = () => {
                         </Box>
                         <Box>
                           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {pool.tokenPair.token1} ({pool.tokenPair.amount1}) / {pool.tokenPair.token2} ({pool.tokenPair.amount2})
+                            {pos.tokenPair.token1} ({pos.tokenPair.amount1}) / {pos.tokenPair.token2} ({pos.tokenPair.amount2})
                           </Typography>
                         </Box>
                       </Box>
                     </TableCell>
+
                     <TableCell>
                       <Chip
-                        label={pool.feeTier}
+                        label={pos.feeTier}
                         size="small"
                         sx={{
                           backgroundColor: 'action.selected',
@@ -280,27 +282,31 @@ const PoolList = () => {
                         }}
                       />
                     </TableCell>
+
                     <TableCell>
                       <Typography variant="body2">
-                        {pool.priceRange.min} - {pool.priceRange.max}
+                        {pos.priceRange.min} - {pos.priceRange.max}
                       </Typography>
                     </TableCell>
+
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                        {pool.currentPrice}
+                        {pos.currentPrice}
                       </Typography>
                     </TableCell>
+
                     <TableCell>
                       <Typography variant="body2">
-                        {pool.liquidity}
+                        {pos.liquidity}
                       </Typography>
                     </TableCell>
+
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Tooltip title="销毁流动性">
+                        <Tooltip title="销毁头寸">
                           <IconButton
                             size="small"
-                            onClick={() => handleBurnClick(pool)}
+                            onClick={() => handleBurnClick(pos)}
                             sx={{
                               color: 'error.main',
                               '&:hover': {
@@ -315,7 +321,7 @@ const PoolList = () => {
                         <Tooltip title="收集费用">
                           <IconButton
                             size="small"
-                            onClick={() => handleCollectClick(pool)}
+                            onClick={() => handleCollectClick(pos)}
                             sx={{
                               color: 'success.main',
                               '&:hover': {
@@ -338,7 +344,7 @@ const PoolList = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={mockPoolData.length}
+          count={PositionData.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -360,7 +366,7 @@ const PoolList = () => {
 
       {/* Burn Dialog */}
       <Dialog open={burnDialogOpen} onClose={() => setBurnDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>销毁流动性</DialogTitle>
+        <DialogTitle>销毁头寸</DialogTitle>
         <DialogContent>
           {selectedPool && (
             <Box sx={{ mb: 2 }}>
@@ -368,7 +374,7 @@ const PoolList = () => {
                 代币对: {selectedPool.tokenPair.token1} / {selectedPool.tokenPair.token2}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                当前流动性: {selectedPool.liquidity}
+                当前头寸价值: {selectedPool.liquidity}
               </Typography>
             </Box>
           )}
@@ -381,11 +387,11 @@ const PoolList = () => {
             sx={{ mb: 2 }}
           />
           <Alert severity="warning" sx={{ mb: 2 }}>
-            警告：销毁流动性将永久移除您的流动性头寸，您将收到相应的代币。
+            警告：销毁头寸将永久移除您的头寸，您将收到相应的代币。
           </Alert>
           {actionSuccess && (
             <Alert severity="success" sx={{ mb: 2 }}>
-              流动性销毁成功！
+              头寸销毁成功！
             </Alert>
           )}
         </DialogContent>

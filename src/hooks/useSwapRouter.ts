@@ -36,11 +36,11 @@ export const useSwapRouter = () => {
         throw new Error("getPools函数不可用");
       }
 
-      // 获取该币对的流动性池
+      // 获取该币对的头寸池
       const pools = await getPools(from, to);
 
       if (!pools.length) {
-        throw new Error("该币对没有流动性池");
+        throw new Error("该币对没有头寸池");
       }
 
       const indexPath = pools.map((pool: Pool) => pool.index);
@@ -74,7 +74,7 @@ export const useSwapRouter = () => {
       } else if (error.message?.includes("revert")) {
         throw new Error("合约调用失败，请检查参数");
       } else if (error.message?.includes("insufficient")) {
-        throw new Error("流动性不足");
+        throw new Error("头寸不足");
       } else if (error.message?.includes("timeout")) {
         throw new Error("网络超时，请重试");
       } else {
@@ -85,17 +85,17 @@ export const useSwapRouter = () => {
 
   // 执行交换功能
   const executeSwap = async (from: string, to: string, amount: string) => {
-    setLoading(true, "正在获取流动性池...");
+    setLoading(true, "正在获取头寸池...");
 
     // 检查getPools函数是否存在
     if (!getPools) {
       throw new Error("getPools函数不可用");
     }
 
-    // 获取该币对的流动性池
+    // 获取该币对的头寸池
     const pools = await getPools(from, to);
     if (!pools.length) {
-      throw new Error("该币对没有流动性池");
+      throw new Error("该币对没有头寸池");
     }
 
     const indexPath = pools.map((pool: Pool) => pool.index);

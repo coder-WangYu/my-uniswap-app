@@ -89,7 +89,8 @@ const Explore: NextPage = () => {
               >
                 <Tab label="代币" />
                 <Tab label="流动性池" />
-                <Tab label="交易" />
+                {/* TODO：后期再实现 */}
+                {/* <Tab label="交易" /> */}
               </Tabs>
             </Box>
 

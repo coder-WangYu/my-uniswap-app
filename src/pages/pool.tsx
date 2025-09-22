@@ -3,16 +3,16 @@ import Head from 'next/head';
 import { CssBaseline, Box } from '@mui/material';
 import { CustomThemeProvider } from '../contexts/ThemeContext';
 import AppHeader from '../components/AppHeader';
-import PoolList from '../components/PoolList';
+import PositionList from '../components/PositionList';
 
 const Pool: NextPage = () => {
   return (
     <CustomThemeProvider>
       <CssBaseline />
       <Head>
-        <title>流动性池 - MyUniswap</title>
+        <title>头寸 - MyUniswap</title>
         <meta
-          content="MyUniswap - 流动性池管理"
+          content="MyUniswap - 头寸管理"
           name="description"
         />
         <link href="/favicon.ico" rel="icon" />
@@ -34,7 +34,7 @@ const Pool: NextPage = () => {
             p: 3,
           }}
         >
-          <PoolList />
+          <PositionList />
         </Box>
       </Box>
     </CustomThemeProvider>

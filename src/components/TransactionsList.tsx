@@ -115,9 +115,9 @@ const TransactionsList = () => {
       case 'swap':
         return '交换';
       case 'add':
-        return '添加流动性';
+        return '添加头寸';
       case 'remove':
-        return '移除流动性';
+        return '移除头寸';
       default:
         return '未知';
     }

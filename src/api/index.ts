@@ -34,3 +34,27 @@ export const GET_POOLS = gql`
     }
   }
 `;
+
+// 头寸列表查询
+export const GET_POSITIONS = gql`
+  query GetPositions($first: Int, $skip: Int) {
+    positions_collection(first: $first, skip: $skip) {
+      id
+      owner
+      tickLower
+      tickUpper
+      amount0
+      amount1
+      liquidity
+      tokenId
+      token0 {
+        symbol
+        totalSupply
+      }
+      token1 {
+        symbol
+        totalSupply
+      }
+    }
+  }
+`;

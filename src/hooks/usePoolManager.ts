@@ -24,9 +24,9 @@ const getTickRange = (
     case 500: // 0.05%
       return { tickLower: -60, tickUpper: 60 }; // 较小范围，适合稳定币
     case 3000: // 0.3%
-      return { tickLower: -887220, tickUpper: 887220 }; // 全范围流动性
+      return { tickLower: -887220, tickUpper: 887220 }; // 全范围头寸
     case 10000: // 1%
-      return { tickLower: -887220, tickUpper: 887220 }; // 全范围流动性
+      return { tickLower: -887220, tickUpper: 887220 }; // 全范围头寸
     default:
       return { tickLower: -887220, tickUpper: 887220 };
   }
@@ -60,7 +60,7 @@ export const usePoolManager = () => {
   const createPool = async (tokenA: Token, tokenB: Token, fee: number) => {
     try {
       // 立即切换到loading状态
-      setLoading(true, "正在创建流动性池...");
+      setLoading(true, "正在创建头寸池...");
 
       // 计算初始价格 (1:1 比率)
       const sqrtPriceX96 = encodePriceSqrt(
@@ -97,9 +97,6 @@ export const usePoolManager = () => {
 
       const tx = await client.waitForTransactionReceipt({ hash });
 
-      // 关闭loading
-      setLoading(false);
-
       if (tx.status === "success") {
         message.success("池子创建成功！");
         return "success";
@@ -108,8 +105,6 @@ export const usePoolManager = () => {
         return "failed";
       }
     } catch (error: any) {
-      // 关闭loading
-      setLoading(false);
       message.error(`创建池子失败: ${error.message || "未知错误"}`);
       return "failed";
     }

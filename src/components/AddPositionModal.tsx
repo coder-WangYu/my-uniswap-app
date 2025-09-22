@@ -23,6 +23,7 @@ import { tokensConfig } from "../lib/contracts";
 import { usePoolManager } from "../hooks/usePoolManager";
 import { usePositionManager } from "../hooks/usePositionManager";
 import { parseEther } from "viem";
+import { useLoading } from "../contexts/LoadingContext";
 
 interface FeeTier {
   id: string;
@@ -67,6 +68,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
   const { getTokenBalance, address } = useUser();
   const { createPool, getPool } = usePoolManager();
   const { addLiquidity } = usePositionManager();
+  const { setLoading } = useLoading()
 
   const feeTiers: FeeTier[] = [
     {
@@ -139,6 +141,7 @@ const AddPositionModal = ({ open, onClose }: AddPositionModalProps) => {
     await userCreatePool();
 
     setCurrentPage("deposit");
+    setLoading(false)
   };
 
   const handleCreate = async () => {

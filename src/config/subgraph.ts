@@ -1,8 +1,8 @@
 export const SUBGRAPH_CONFIG = {
   // 本地开发环境
   local: {
-    // url: "http://localhost:8000/subgraphs/name/my-uniswap-subgraph",
-    url: "https://api.studio.thegraph.com/query/120041/my-uniswap-subgraph/0.0.7",
+    url: "http://localhost:8000/subgraphs/name/my-uniswap-subgraph",
+    // url: "https://api.studio.thegraph.com/query/120041/my-uniswap-subgraph/0.1.0",
     wsUrl: "ws://localhost:8000/subgraphs/name/my-uniswap-subgraph",
   },
   // 生产环境（部署到The Graph Studio后）

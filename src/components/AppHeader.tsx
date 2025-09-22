@@ -80,7 +80,7 @@ const AppHeader = () => {
             textDecoration: currentPath === '/pool' ? 'underline' : 'none',
           }}
         >
-          流动性池
+          头寸
         </Button>
         <Button 
           variant="text" 

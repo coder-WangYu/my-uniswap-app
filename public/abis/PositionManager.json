@@ -1,5 +1,57 @@
 [
   {
+    "type": "event",
+    "name": "IncreaseLiquidity",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "indexed": true
+      },
+      {
+        "name": "liquidity", 
+        "type": "uint128",
+        "indexed": false
+      },
+      {
+        "name": "amount0",
+        "type": "uint256",
+        "indexed": false
+      },
+      {
+        "name": "amount1",
+        "type": "uint256",
+        "indexed": false
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "DecreaseLiquidity",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256", 
+        "indexed": true
+      },
+      {
+        "name": "liquidity",
+        "type": "uint128",
+        "indexed": false
+      },
+      {
+        "name": "amount0",
+        "type": "uint256",
+        "indexed": false
+      },
+      {
+        "name": "amount1",
+        "type": "uint256",
+        "indexed": false
+      }
+    ]
+  },
+  {
     "inputs": [
       { "internalType": "address", "name": "_poolManger", "type": "address" }
     ],
