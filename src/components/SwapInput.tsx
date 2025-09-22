@@ -55,7 +55,6 @@ const SwapInput = ({
             onChange={readOnly ? undefined : (e) => onChange(e.target.value)}
             placeholder={placeholder}
             variant="standard"
-            readOnly={readOnly}
             disabled={readOnly}
             InputProps={{
               disableUnderline: true,
