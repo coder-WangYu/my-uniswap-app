@@ -88,14 +88,7 @@ const MyPositions = (props: MyPositionsProps) => {
     setLoading(false);
 
     if (result === "success") {
-      // 重新获取数据
-      const { data } = useQuery(GET_POSITIONS);
-      setMyPositions(
-        // @ts-ignore
-        data.positions_collection.filter(
-          (item: any) => item.owner.toLowerCase() === address?.toLowerCase()
-        )
-      );
+      // TODO: 重新获取数据
       return message.success("销毁头寸成功");
     } else {
       return message.error("销毁头寸失败");
