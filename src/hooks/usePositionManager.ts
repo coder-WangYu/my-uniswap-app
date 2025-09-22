@@ -6,13 +6,15 @@ import { contractsConfig } from "../lib/contracts";
 import { PositionParams } from "../interfaces";
 
 export const usePositionManager = () => {
-  const { client } = useUser();
+  const { client, address } = useUser();
   const { setLoading } = useLoading();
   const { data: walletClient } = useWalletClient();
 
   if (!walletClient)
     return {
       addLiquidity: () => Promise.resolve("failed"),
+      burnToken: () => Promise.resolve("failed"),
+      collectToken: () => Promise.resolve("failed"),
     };
 
   const positionManager = getContract({
@@ -37,7 +39,34 @@ export const usePositionManager = () => {
     }
   };
 
+  const burnToken = async (id: string) => {
+    const positionId = id as `0x${string}`;
+
+    try {
+      const hash = await positionManager.write.burn([positionId as `0x${string}`]);
+      const tx = await client.waitForTransactionReceipt({ hash });
+      return tx.status;
+    } catch {
+      return "false";
+    }
+  };
+
+  const collectToken = async (id: string) => {
+    const positionId = id as `0x${string}`;
+    const recipient = address as `0x${string}`;
+
+    try {
+      const hash = await positionManager.write.collect([positionId, recipient]);
+      const tx = await client.waitForTransactionReceipt({ hash });
+      return tx.status;
+    } catch {
+      return "false";
+    }
+  };
+
   return {
     addLiquidity,
+    burnToken,
+    collectToken,
   };
 };

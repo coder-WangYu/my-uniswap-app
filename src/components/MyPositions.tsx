@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Paper,
   Typography,
@@ -13,12 +13,24 @@ import {
   TablePagination,
   Avatar,
   Link,
-} from '@mui/material';
-import { Add } from '@mui/icons-material';
-import AddPositionModal from './AddPositionModal';
+} from "@mui/material";
+import { Add } from "@mui/icons-material";
+import AddPositionModal from "./AddPositionModal";
+import { useUser } from "../hooks/useUser";
+import { useLoading } from "../contexts/LoadingContext";
+import { usePositionManager } from "../hooks/usePositionManager";
+import { useMessage } from "../contexts/MessageContext";
+import { GET_POSITIONS } from "../api";
+import { useQuery } from "@apollo/client/react";
+
+interface MyPositionsProps {
+  positionData?: PositionData[];
+}
 
 interface PositionData {
   id: string;
+  owner: string;
+  tokenId: string;
   tokenPair: {
     token1: string;
     token2: string;
@@ -33,205 +45,107 @@ interface PositionData {
   currentPrice: string;
 }
 
-const mockPositionData: PositionData[] = [
-  {
-    id: '1',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-  },
-  {
-    id: '2',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-  },
-  {
-    id: '3',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-  },
-  {
-    id: '4',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-  },
-  {
-    id: '5',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-  },
-  {
-    id: '6',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-  },
-  {
-    id: '7',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-  },
-  {
-    id: '8',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-  },
-  {
-    id: '9',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-  },
-  {
-    id: '10',
-    tokenPair: {
-      token1: 'ETH',
-      token2: 'USDC',
-      amount1: '2395.123',
-      amount2: '23958.97',
-    },
-    feeTier: '1.00%',
-    priceRange: {
-      min: '2421.1866',
-      max: '6197.9015',
-    },
-    currentPrice: '3,092.77',
-  },
-];
-
-const MyPositions = () => {
+const MyPositions = (props: MyPositionsProps) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [myPositions, setMyPositions] = useState<PositionData[]>([]);
+  const { positionData } = props;
+  const { address } = useUser();
+  const { setLoading } = useLoading();
+  const { burnToken, collectToken } = usePositionManager();
+  const message = useMessage();
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
+  // 收取奖励
+  async function handleBurn(id: string) {
+    setLoading(true, "正在收取奖励...");
+
+    const result = await burnToken(id);
+    setLoading(false);
+
+    if (result === "success") {
+      return message.success("收取奖励成功");
+    } else {
+      return message.error("收取奖励成功");
+    }
+  }
+
+  // 销毁头寸
+  async function handleCollect(id: string) {
+    setLoading(true, "正在销毁头寸...");
+
+    const result = await collectToken(id);
+    setLoading(false);
+
+    if (result === "success") {
+      // 重新获取数据
+      const { data } = useQuery(GET_POSITIONS);
+      setMyPositions(
+        // @ts-ignore
+        data.positions_collection.filter(
+          (item: any) => item.owner.toLowerCase() === address?.toLowerCase()
+        )
+      );
+      return message.success("销毁头寸成功");
+    } else {
+      return message.error("销毁头寸失败");
+    }
+  }
+
+  useEffect(() => {
+    setLoading(true, "正在获取头寸列表...");
+
+    if (positionData && address) {
+      setMyPositions(
+        positionData.filter(
+          (item) => item.owner.toLowerCase() === address.toLowerCase()
+        )
+      );
+    }
+
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 200);
+
+    return () => clearInterval(timer);
+  }, [positionData, address]);
+
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+    <Box sx={{ maxWidth: 1200, mx: "auto" }}>
       <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 600 }}>
-        Positions
+        我的头寸
       </Typography>
 
       <Paper
         elevation={0}
         sx={{
-          backgroundColor: 'background.paper',
-          border: '1px solid',
-          borderColor: 'divider',
+          backgroundColor: "background.paper",
+          border: "1px solid",
+          borderColor: "divider",
           borderRadius: 3,
         }}
       >
-        <Box sx={{ p: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ p: 3, borderBottom: "1px solid", borderColor: "divider" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-              My Positions
+              我的头寸列表
             </Typography>
-            
-            <Button
-              variant="contained"
-              startIcon={<Add />}
-              onClick={() => setAddModalOpen(true)}
-              sx={{
-                textTransform: 'none',
-                px: 3,
-              }}
-            >
-              Add
-            </Button>
           </Box>
         </Box>
 
@@ -239,36 +153,49 @@ const MyPositions = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Token</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Fee tier</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Set price range</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Current price</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: 'text.primary' }}>Actions</TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "text.primary" }}>
+                  代币
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "text.primary" }}>
+                  费用等级
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "text.primary" }}>
+                  设置价格范围
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "text.primary" }}>
+                  当前价格
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, color: "text.primary" }}>
+                  操作
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {mockPositionData
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((position) => (
+              {myPositions &&
+                myPositions.map((position) => (
                   <TableRow
                     key={position.id}
                     hover
                     sx={{
-                      '&:hover': {
-                        backgroundColor: 'action.hover',
+                      "&:hover": {
+                        backgroundColor: "action.hover",
                       },
-                      cursor: 'pointer',
+                      cursor: "pointer",
                     }}
                   >
                     <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
                           <Avatar
                             sx={{
                               width: 24,
                               height: 24,
-                              backgroundColor: 'primary.main',
-                              fontSize: '0.75rem',
+                              backgroundColor: "primary.main",
+                              fontSize: "0.75rem",
                             }}
                           >
                             E
@@ -277,8 +204,8 @@ const MyPositions = () => {
                             sx={{
                               width: 24,
                               height: 24,
-                              backgroundColor: 'secondary.main',
-                              fontSize: '0.75rem',
+                              backgroundColor: "secondary.main",
+                              fontSize: "0.75rem",
                               ml: -1,
                             }}
                           >
@@ -287,7 +214,10 @@ const MyPositions = () => {
                         </Box>
                         <Box>
                           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {position.tokenPair.token1} ({position.tokenPair.amount1}) / {position.tokenPair.token2} ({position.tokenPair.amount2})
+                            {position.tokenPair.token1} (
+                            {position.tokenPair.amount1}) /{" "}
+                            {position.tokenPair.token2} (
+                            {position.tokenPair.amount2})
                           </Typography>
                         </Box>
                       </Box>
@@ -308,36 +238,36 @@ const MyPositions = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Box sx={{ display: "flex", gap: 2 }}>
                         <Link
                           component="button"
                           variant="body2"
                           sx={{
-                            color: 'primary.main',
-                            textDecoration: 'none',
-                            cursor: 'pointer',
-                            '&:hover': {
-                              textDecoration: 'underline',
+                            color: "primary.main",
+                            textDecoration: "none",
+                            cursor: "pointer",
+                            "&:hover": {
+                              textDecoration: "underline",
                             },
                           }}
-                          onClick={() => console.log('Remove position', position.id)}
+                          onClick={() => handleBurn(position.tokenId)}
                         >
-                          Remove
+                          收回
                         </Link>
                         <Link
                           component="button"
                           variant="body2"
                           sx={{
-                            color: 'primary.main',
-                            textDecoration: 'none',
-                            cursor: 'pointer',
-                            '&:hover': {
-                              textDecoration: 'underline',
+                            color: "primary.main",
+                            textDecoration: "none",
+                            cursor: "pointer",
+                            "&:hover": {
+                              textDecoration: "underline",
                             },
                           }}
-                          onClick={() => console.log('Collect fees', position.id)}
+                          onClick={() => handleCollect(position.tokenId)}
                         >
-                          Collect
+                          销毁
                         </Link>
                       </Box>
                     </TableCell>
@@ -350,25 +280,20 @@ const MyPositions = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={mockPositionData.length}
+          count={myPositions?.length ?? 0}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           sx={{
-            borderTop: '1px solid',
-            borderColor: 'divider',
-            '& .MuiTablePagination-toolbar': {
-              color: 'text.secondary',
+            borderTop: "1px solid",
+            borderColor: "divider",
+            "& .MuiTablePagination-toolbar": {
+              color: "text.secondary",
             },
           }}
         />
       </Paper>
-
-      <AddPositionModal
-        open={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-      />
     </Box>
   );
 };

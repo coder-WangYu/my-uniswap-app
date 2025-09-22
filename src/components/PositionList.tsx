@@ -39,6 +39,8 @@ import { formatEther } from "viem";
 
 interface PositionData {
   id: string;
+  owner: string;
+  tokenId: string;
   tokenPair: {
     token1: string;
     token2: string;
@@ -95,12 +97,14 @@ const PoolList = () => {
     }
     setShowMyPositions(true);
   }
-
+    
+  // 处理数据
   function dealPositionData(data: any) {
-    // 处理数据
     const posData = data.map((pos: any) => {
       return {
         id: pos.id,
+        owner: pos.owner,
+        tokenId: pos.tokenId,
         tokenPair: {
           token1: pos.token0.symbol,
           token2: pos.token1.symbol,
@@ -160,7 +164,7 @@ const PoolList = () => {
             ← 返回头寸列表
           </Button>
         </Box>
-        <MyPositions />
+        <MyPositions positionData={PositionData} />
       </Box>
     );
   }
