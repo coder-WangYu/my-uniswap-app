@@ -1,13 +1,13 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import {
   sepolia,
 } from 'wagmi/chains';
 import { http } from 'wagmi';
 import "dotenv/config";
+import { createConfig } from 'wagmi';
+import { connectors } from './myWalletList';
 
-export const config = getDefaultConfig({
-  appName: 'MyUniswap',
-  projectId: 'YOUR_PROJECT_ID',
+export const config = createConfig({
+  connectors,
   chains: [
     sepolia
   ],
